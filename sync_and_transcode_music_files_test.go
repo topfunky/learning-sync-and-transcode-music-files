@@ -7,8 +7,19 @@ import (
 	"path/filepath"
 	"testing"
 
+	"os/exec"
+	"log"
+
 	"github.com/stretchr/testify/assert"
 )
+
+func generateM4aFixtureFileAtPath(path string) {
+	cmd := exec.Command("ffmpeg", "-f", "lavfi", "-i", "sine=frequency=1000:duration=5", path)
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func TestFindFiles(t *testing.T) {
 	// Create a temporary directory for testing

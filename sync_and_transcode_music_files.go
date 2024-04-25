@@ -1,16 +1,14 @@
 package main
 
 import (
-	"os"
 	"fmt"
-
+	"os"
 )
 
 func main() {
 	directory := ""
 	if len(os.Args) > 1 {
 		directory = os.Args[1]
-
 		findFiles(directory)
 	} else {
 		fmt.Println("Usage: sync_and_transcode_music_files <directory>")
