@@ -7,18 +7,28 @@ import (
 	"path/filepath"
 	"testing"
 
-	"os/exec"
 	"log"
+	"os/exec"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func generateM4aFixtureFileAtPath(path string) {
+func generateM4aFixtureFileAtPath(path string) error {
 	cmd := exec.Command("ffmpeg", "-f", "lavfi", "-i", "sine=frequency=1000:duration=5", path)
 	err := cmd.Run()
 	if err != nil {
 		log.Fatal(err)
+		return err
 	}
+	return nil
+}
+
+func generateTextFileFixtureAtPath(path string) error {
+	if err := ioutil.WriteFile(path, []byte{}, 0644); err != nil {
+		log.Fatal(err)
+		return err
+	}
+	return nil
 }
 
 func TestFindFiles(t *testing.T) {
@@ -33,14 +43,20 @@ func TestFindFiles(t *testing.T) {
 	testFiles := []string{
 		"file1.m4a",
 		"file2.m4a",
-		"file3.txt", // Not an .m4a file
 		"file4.m4a",
 	}
 	for _, file := range testFiles {
 		filePath := filepath.Join(tempDir, file)
-		if err := ioutil.WriteFile(filePath, []byte{}, 0644); err != nil {
+		if err := generateM4aFixtureFileAtPath(filePath); err != nil {
 			t.Fatalf("failed to create test file: %v", err)
 		}
+	}
+
+	// A text file that is not an m4a file
+	testTextFileName := "file3.txt" // Not an .m4a file
+	textFilePath := filepath.Join(tempDir, testTextFileName)
+	if err := generateTextFileFixtureAtPath(textFilePath); err != nil {
+		t.Fatalf("failed to create test text file: %v", err)
 	}
 
 	// Call the findFiles function
@@ -48,9 +64,9 @@ func TestFindFiles(t *testing.T) {
 
 	// Verify that the transcoding was successful for .m4a files
 	transcodedFiles := []string{
-		"file1.m4a.transcoded",
-		"file2.m4a.transcoded",
-		"file4.m4a.transcoded",
+		"file1.mp3",
+		"file2.mp3",
+		"file4.mp3",
 	}
 	for _, file := range transcodedFiles {
 		filePath := filepath.Join(tempDir, file)
