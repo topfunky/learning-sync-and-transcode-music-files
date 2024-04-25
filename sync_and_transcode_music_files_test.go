@@ -70,15 +70,13 @@ func TestFindFiles(t *testing.T) {
 	}
 	for _, file := range transcodedFiles {
 		filePath := filepath.Join(tempDir, file)
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			assert.Fail(t, fmt.Sprintf("transcoded file not found: %s", file))
-		}
+		_, err = os.Stat(filePath)
+		assert.False(t, os.IsNotExist(err), fmt.Sprintf("transcoded file not found: %s", file))
 	}
 
 	// Verify that the non-.m4a file was not transcoded
 	nonTranscodedFile := "file3.txt.transcoded"
 	filePath := filepath.Join(tempDir, nonTranscodedFile)
-	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
-		t.Errorf("unexpected transcoded file found: %s", nonTranscodedFile)
-	}
+	_, err = os.Stat(filePath)
+	assert.True(t, os.IsNotExist(err), fmt.Sprintf("unexpected transcoded file found: %s", nonTranscodedFile))
 }
