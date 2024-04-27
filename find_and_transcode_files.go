@@ -9,6 +9,7 @@ import (
 	"github.com/xfrr/goffmpeg/transcoder"
 )
 
+// findFiles traverses the specified directory and transcodes all .m4a files to .mp3 format.
 func findFiles(directory string) {
 	fmt.Printf("🔨 Transcoding for directory %s\n", directory)
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
@@ -32,6 +33,7 @@ func findFiles(directory string) {
 	}
 }
 
+// transcodeFileAtPath transcodes the file at the specified path from .m4a to .mp3 format.
 func transcodeFileAtPath(path string) error {
 	trans := new(transcoder.Transcoder)
 	output := strings.TrimSuffix(path, filepath.Ext(path)) + ".mp3"
@@ -50,6 +52,7 @@ func transcodeFileAtPath(path string) error {
 	return nil
 }
 
+// compareDirectories compares the files in two directories and prints the files exclusive to directory A.
 func compareDirectories(a string, b string) error {
 	filesA, err := getFilenames(a)
 	if err != nil {
@@ -71,6 +74,7 @@ func compareDirectories(a string, b string) error {
 	return nil
 }
 
+// getFilenames returns a list of filenames in the specified directory.
 func getFilenames(directory string) ([]string, error) {
 	var filenames []string
 
@@ -93,6 +97,7 @@ func getFilenames(directory string) ([]string, error) {
 	return filenames, nil
 }
 
+// getExclusiveFiles returns the files exclusive to filesA compared to filesB.
 func getExclusiveFiles(filesA, filesB []string) []string {
 	exclusiveFiles := make([]string, 0)
 
