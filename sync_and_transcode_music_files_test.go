@@ -32,11 +32,22 @@ func generateTextFileFixtureAtPath(path string) error {
 }
 
 func setupFixtureFilesInDirectory(tempDir string) error {
+	// Create a directory within tempDir named "source"
+	sourceDir := filepath.Join(tempDir, "source")
+	if err := os.Mkdir(sourceDir, 0755); err != nil {
+		return fmt.Errorf("failed to create source directory: %v", err)
+	}
+
+	destinationDir := filepath.Join(tempDir, "destination")
+	if err := os.Mkdir(destinationDir, 0755); err != nil {
+		return fmt.Errorf("failed to create destination directory: %v", err)
+	}
+
 	// Create some test files with .m4a extension
 	testFiles := []string{
-		"file1.m4a",
-		"file2.m4a",
-		"file4.m4a",
+		"source/file1.m4a",
+		"source/file2.m4a",
+		"source/file4.m4a",
 	}
 	for _, file := range testFiles {
 		filePath := filepath.Join(tempDir, file)
@@ -70,17 +81,18 @@ func setup(t *testing.T) (string, error) {
 }
 
 func TestFindFiles(t *testing.T) {
+	// TODO: Verify that output files are rendered to the destination directory
 	tempDir, err := setup(t)
 	defer os.RemoveAll(tempDir)
 
-	// Call the findFiles function
+	// TODO: Pass `tempDir/source` and `tempDir/destination` to this func
 	findFiles(tempDir)
 
 	// Verify that the transcoding was successful for .m4a files
 	transcodedFiles := []string{
-		"file1.mp3",
-		"file2.mp3",
-		"file4.mp3",
+		"source/file1.mp3",
+		"source/file2.mp3",
+		"source/file4.mp3",
 	}
 	for _, file := range transcodedFiles {
 		t.Run(fmt.Sprintf("File %s should be rendered", file), func(t *testing.T) {
