@@ -23,3 +23,6 @@
 # Music files
 music/*
 *.m4a
+
+# Temporary directory
+tmp/*
