@@ -11,7 +11,7 @@ import (
 
 // findFiles traverses the specified directory and transcodes all .m4a files to .mp3 format.
 func findFiles(directory string) {
-	fmt.Printf("🔨 Transcoding for directory %s\n", directory)
+	fmt.Printf("🔍 Finding files in source directory %s\n", directory)
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -52,26 +52,21 @@ func transcodeFileAtPath(path string) error {
 	return nil
 }
 
-// compareDirectories compares the files in two directories and prints the files exclusive to directory A.
-func compareDirectories(a string, b string) error {
+// compareDirectories compares the files in two directories and returns a list of the files exclusive to directory A.
+func compareDirectories(a string, b string) ([]string, error) {
 	filesA, err := getFilenames(a)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	filesB, err := getFilenames(b)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	exclusiveFiles := getExclusiveFiles(filesA, filesB)
 
-	fmt.Println("Files exclusive to directory A:")
-	for _, file := range exclusiveFiles {
-		fmt.Println(file)
-	}
-
-	return nil
+	return exclusiveFiles, nil
 }
 
 // getFilenames returns a list of filenames in the specified directory.
@@ -106,7 +101,14 @@ func getExclusiveFiles(filesA, filesB []string) []string {
 		fileMap[file] = true
 	}
 
+	// Replace .mp3 file extension for all files in a to .m4a and store in new variable
+	var sourceFileOutputNameList []string
 	for _, file := range filesA {
+		fileWithM4A := strings.TrimSuffix(file, ".m4a") + ".mp3"
+		sourceFileOutputNameList = append(sourceFileOutputNameList, fileWithM4A)
+	}
+
+	for _, file := range sourceFileOutputNameList {
 		if !fileMap[file] {
 			exclusiveFiles = append(exclusiveFiles, file)
 		}
