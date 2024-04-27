@@ -6,12 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type FixtureParams struct {
-	SourceList      []string
-	DestinationList []string
-	ExpectedOutput  []string
-}
-
 func TestGetExclusiveFiles(t *testing.T) {
 	cases := []struct {
 		Name            string
