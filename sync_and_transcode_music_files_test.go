@@ -31,14 +31,7 @@ func generateTextFileFixtureAtPath(path string) error {
 	return nil
 }
 
-func TestFindFiles(t *testing.T) {
-	// Create a temporary directory for testing
-	tempDir, err := ioutil.TempDir("", "test")
-	if err != nil {
-		t.Fatalf("failed to create temporary directory: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
-
+func setupFixtureFilesInDirectory(tempDir string) error {
 	// Create some test files with .m4a extension
 	testFiles := []string{
 		"file1.m4a",
@@ -48,7 +41,7 @@ func TestFindFiles(t *testing.T) {
 	for _, file := range testFiles {
 		filePath := filepath.Join(tempDir, file)
 		if err := generateM4aFixtureFileAtPath(filePath); err != nil {
-			t.Fatalf("failed to create test file: %v", err)
+			return fmt.Errorf("failed to create test file: %v", err)
 		}
 	}
 
@@ -56,8 +49,29 @@ func TestFindFiles(t *testing.T) {
 	testTextFileName := "file3.txt" // Not an .m4a file
 	textFilePath := filepath.Join(tempDir, testTextFileName)
 	if err := generateTextFileFixtureAtPath(textFilePath); err != nil {
-		t.Fatalf("failed to create test text file: %v", err)
+		return fmt.Errorf("failed to create test text file: %v", err)
 	}
+
+	return nil
+}
+
+func setup(t *testing.T) (string, error) {
+	// Create a temporary directory for testing
+	tempDir, err := ioutil.TempDir("", "test")
+	if err != nil {
+		t.Fatalf("failed to create temporary directory: %v", err)
+	}
+
+	// Set up fixture files in the temporary directory
+	if err := setupFixtureFilesInDirectory(tempDir); err != nil {
+		t.Fatalf("failed to set up fixture files: %v", err)
+	}
+	return tempDir, nil
+}
+
+func TestFindFiles(t *testing.T) {
+	tempDir, err := setup(t)
+	defer os.RemoveAll(tempDir)
 
 	// Call the findFiles function
 	findFiles(tempDir)
@@ -69,14 +83,17 @@ func TestFindFiles(t *testing.T) {
 		"file4.mp3",
 	}
 	for _, file := range transcodedFiles {
-		filePath := filepath.Join(tempDir, file)
-		_, err = os.Stat(filePath)
-		assert.False(t, os.IsNotExist(err), fmt.Sprintf("transcoded file not found: %s", file))
+		t.Run(fmt.Sprintf("File %s should be rendered", file), func(t *testing.T) {
+			filePath := filepath.Join(tempDir, file)
+			_, err = os.Stat(filePath)
+			assert.False(t, os.IsNotExist(err), fmt.Sprintf("transcoded file not found: %s", file))
+		})
 	}
 
-	// Verify that the non-.m4a file was not transcoded
-	nonTranscodedFile := "file3.txt.transcoded"
-	filePath := filepath.Join(tempDir, nonTranscodedFile)
-	_, err = os.Stat(filePath)
-	assert.True(t, os.IsNotExist(err), fmt.Sprintf("unexpected transcoded file found: %s", nonTranscodedFile))
+	t.Run("Verify that the non-.m4a file was not transcoded", func(t *testing.T) {
+		nonTranscodedFile := "file3.txt.transcoded"
+		filePath := filepath.Join(tempDir, nonTranscodedFile)
+		_, err = os.Stat(filePath)
+		assert.True(t, os.IsNotExist(err), fmt.Sprintf("unexpected transcoded file found: %s", nonTranscodedFile))
+	})
 }
