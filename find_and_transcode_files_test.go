@@ -43,13 +43,19 @@ func TestGetExclusiveFiles(t *testing.T) {
 			DestinationList: []string{"file4.mp3", "file5.mp3", "file6.mp3"},
 			ExpectedOutput:  []string{"file1.mp3", "file2.mp3", "file3.mp3"},
 		},
+		{
+			Name:            "Source contains mp3 files which should be copied verbatim",
+			SourceList:      []string{"file1.m4a", "file2.m4a", "file3.m4a", "file103.mp3"},
+			DestinationList: []string{"file4.mp3", "file5.mp3", "file6.mp3"},
+			ExpectedOutput:  []string{"file1.mp3", "file2.mp3", "file3.mp3", "file103.mp3"},
+		},
+		{
+			Name:            "Destination contains m4a files which should be ignored",
+			SourceList:      []string{"file1.m4a", "file2.m4a", "file3.m4a"},
+			DestinationList: []string{"file4.m4a", "file5.mp3", "file6.mp3"},
+			ExpectedOutput:  []string{"file1.mp3", "file2.mp3", "file3.mp3"},
+		},
 	}
-
-	// Test case: mp3 files as source
-
-	// Test case: both mp3 and m4a files as source
-
-	// Test case: m4a files in destination
 
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {

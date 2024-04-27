@@ -101,11 +101,16 @@ func getExclusiveFiles(filesA, filesB []string) []string {
 		fileMap[file] = true
 	}
 
-	// Replace .mp3 file extension for all files in a to .m4a and store in new variable
+	// Generate destination filenames so they can be compared to rendered output filenames
 	var sourceFileOutputNameList []string
 	for _, file := range filesA {
-		fileWithM4A := strings.TrimSuffix(file, ".m4a") + ".mp3"
-		sourceFileOutputNameList = append(sourceFileOutputNameList, fileWithM4A)
+		destinationFilename := ""
+		if strings.HasSuffix(file, ".mp3") {
+			destinationFilename = file
+		} else {
+			destinationFilename = strings.TrimSuffix(file, ".m4a") + ".mp3"
+		}
+		sourceFileOutputNameList = append(sourceFileOutputNameList, destinationFilename)
 	}
 
 	for _, file := range sourceFileOutputNameList {
