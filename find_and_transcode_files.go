@@ -33,11 +33,29 @@ func findFiles(sourceDir, destinationDir string) {
 	}
 }
 
+func trimFirstFolder(path string) (string, error) {
+	// Split the path into a slice of its components
+	parts := strings.Split(filepath.ToSlash(path), "/")
+
+	// Check if the path has at least one folder
+	if len(parts) < 2 {
+		return "", fmt.Errorf("path does not contain a folder")
+	}
+
+	// Remove the first folder
+	trimmedPath := strings.Join(parts[1:], "/")
+
+	return trimmedPath, nil
+}
+
 // transcodeFileAtPath transcodes the file at the specified path from .m4a to .mp3 format.
-func transcodeFileAtPath(path string) error {
+// TODO: Take `sourcePath` and `destinationPath` as args.
+// TODO: Render to destinationPath at subfolder that matches sourcePath
+func transcodeFileAtPath(sourcePath string) error {
 	trans := new(transcoder.Transcoder)
-	output := strings.TrimSuffix(path, filepath.Ext(path)) + ".mp3"
-	err := trans.Initialize(path, output)
+	// TODO: Call trimFirstFolder(sourcePath)
+	output := strings.TrimSuffix(sourcePath, filepath.Ext(sourcePath)) + ".mp3"
+	err := trans.Initialize(sourcePath, output)
 	if err != nil {
 		return err
 	}
@@ -48,7 +66,7 @@ func transcodeFileAtPath(path string) error {
 		return err
 	}
 
-	fmt.Printf("🎶 Transcoded: %s to %s\n", path, output)
+	fmt.Printf("🎶 Transcoded: %s to %s\n", sourcePath, output)
 	return nil
 }
 

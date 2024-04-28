@@ -86,7 +86,6 @@ func TestFindFiles(t *testing.T) {
 
 	findFiles(filepath.Join(tempDir, "source"), filepath.Join(tempDir, "destination"))
 
-	// Verify that the transcoding was successful for .m4a files
 	transcodedFiles := []string{
 		"source/file1.mp3",
 		"source/file2.mp3",
@@ -107,5 +106,4 @@ func TestFindFiles(t *testing.T) {
 		assert.True(t, os.IsNotExist(err), fmt.Sprintf("unexpected transcoded file found: %s", nonTranscodedFile))
 	})
 
-	// TODO: Verify that output files are rendered to the destination directory
 }
