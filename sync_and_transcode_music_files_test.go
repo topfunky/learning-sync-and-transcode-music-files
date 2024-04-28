@@ -14,6 +14,9 @@ import (
 )
 
 func generateM4aFixtureFileAtPath(path string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return fmt.Errorf("failed to create directories: %v", err)
+	}
 	cmd := exec.Command("ffmpeg", "-f", "lavfi", "-i", "sine=frequency=1000:duration=5", path)
 	err := cmd.Run()
 	if err != nil {
@@ -48,6 +51,7 @@ func setupFixtureFilesInDirectory(tempDir string) error {
 		"source/file1.m4a",
 		"source/file2.m4a",
 		"source/file4.m4a",
+		"source/a-band/file5.m4a",
 	}
 	for _, file := range testFiles {
 		filePath := filepath.Join(tempDir, file)
@@ -90,6 +94,7 @@ func TestFindFiles(t *testing.T) {
 		"destination/file1.mp3",
 		"destination/file2.mp3",
 		"destination/file4.mp3",
+		"destination/a-band/file5.mp3",
 	}
 	for _, file := range transcodedFiles {
 		t.Run(fmt.Sprintf("File %s should be rendered", file), func(t *testing.T) {

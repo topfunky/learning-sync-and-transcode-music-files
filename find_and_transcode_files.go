@@ -42,6 +42,10 @@ func transcodeFileAtPath(sourcePath, destinationPath string) error {
 
 	destinationPathMP3 := strings.TrimSuffix(destinationPath, filepath.Ext(destinationPath)) + ".mp3"
 
+	if err := os.MkdirAll(filepath.Dir(destinationPath), 0755); err != nil {
+		return fmt.Errorf("failed to create directories: %v", err)
+	}
+
 	err := trans.Initialize(sourcePath, destinationPathMP3)
 	if err != nil {
 		return err
