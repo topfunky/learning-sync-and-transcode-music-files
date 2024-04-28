@@ -12,7 +12,7 @@ Coming soon.
 
 ## Tests
 
-![Go Tests](https://github.com/topfunky/learning-sync-and-transcode-music-files/actions/workflows/go.yml/badge.svg?event=push)
+![Go Tests](https://github.com/topfunky/learning-sync-and-transcode-music-files/actions/workflows/go.yml/badge.svg)
 
 ```
 go test
