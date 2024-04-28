@@ -52,6 +52,7 @@ func setupFixtureFilesInDirectory(tempDir string) error {
 		"source/file2.m4a",
 		"source/file4.m4a",
 		"source/a-band/file5.m4a",
+		"source/Whitespace Band/file6.m4a",
 	}
 	for _, file := range testFiles {
 		filePath := filepath.Join(tempDir, file)
@@ -95,6 +96,7 @@ func TestFindFiles(t *testing.T) {
 		"destination/file2.mp3",
 		"destination/file4.mp3",
 		"destination/a-band/file5.mp3",
+		"destination/Whitespace Band/file6.mp3",
 	}
 	for _, file := range transcodedFiles {
 		t.Run(fmt.Sprintf("File %s should be rendered", file), func(t *testing.T) {
