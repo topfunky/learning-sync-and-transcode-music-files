@@ -81,12 +81,10 @@ func setup(t *testing.T) (string, error) {
 }
 
 func TestFindFiles(t *testing.T) {
-	// TODO: Verify that output files are rendered to the destination directory
 	tempDir, err := setup(t)
 	defer os.RemoveAll(tempDir)
 
-	// TODO: Pass `tempDir/source` and `tempDir/destination` to this func
-	findFiles(tempDir)
+	findFiles(filepath.Join(tempDir, "source"), filepath.Join(tempDir, "destination"))
 
 	// Verify that the transcoding was successful for .m4a files
 	transcodedFiles := []string{
@@ -108,4 +106,6 @@ func TestFindFiles(t *testing.T) {
 		_, err = os.Stat(filePath)
 		assert.True(t, os.IsNotExist(err), fmt.Sprintf("unexpected transcoded file found: %s", nonTranscodedFile))
 	})
+
+	// TODO: Verify that output files are rendered to the destination directory
 }

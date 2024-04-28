@@ -5,13 +5,14 @@ import (
 	"os"
 )
 
+// TODO: Use named options as arg to command line for source and destination
 func main() {
-	directory := ""
-	if len(os.Args) > 1 {
-		directory = os.Args[1]
-		findFiles(directory)
+	if len(os.Args) > 2 {
+		sourceDir := os.Args[1]
+		destinationDir := os.Args[2]
+		findFiles(sourceDir, destinationDir)
 	} else {
-		fmt.Println("Usage: sync_and_transcode_music_files <directory>")
+		fmt.Println("Usage: sync_and_transcode_music_files <source-directory> <destination-directory>")
 		os.Exit(1)
 	}
 }

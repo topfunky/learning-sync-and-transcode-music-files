@@ -10,9 +10,9 @@ import (
 )
 
 // findFiles traverses the specified directory and transcodes all .m4a files to .mp3 format.
-func findFiles(directory string) {
-	fmt.Printf("🔍 Finding files in source directory %s\n", directory)
-	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+func findFiles(sourceDir, destinationDir string) {
+	fmt.Printf("🔍 Finding files in source directory %s\n", sourceDir)
+	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
