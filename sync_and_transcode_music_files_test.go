@@ -87,9 +87,9 @@ func TestFindFiles(t *testing.T) {
 	findFiles(filepath.Join(tempDir, "source"), filepath.Join(tempDir, "destination"))
 
 	transcodedFiles := []string{
-		"source/file1.mp3",
-		"source/file2.mp3",
-		"source/file4.mp3",
+		"destination/file1.mp3",
+		"destination/file2.mp3",
+		"destination/file4.mp3",
 	}
 	for _, file := range transcodedFiles {
 		t.Run(fmt.Sprintf("File %s should be rendered", file), func(t *testing.T) {
