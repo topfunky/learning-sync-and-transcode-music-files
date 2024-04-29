@@ -11,6 +11,7 @@ import (
 	"os/exec"
 
 	"github.com/stretchr/testify/assert"
+	// "time"
 )
 
 func generateM4aFixtureFileAtPath(path string) error {
@@ -34,7 +35,7 @@ func generateTextFileFixtureAtPath(path string) error {
 	return nil
 }
 
-func setupFixtureFilesInDirectory(tempDir string) error {
+func setupFixtureFilesInDirectory(tempDir string, numberOfFiles int) error {
 	// Create a directory within tempDir named "source"
 	sourceDir := filepath.Join(tempDir, "source")
 	if err := os.Mkdir(sourceDir, 0755); err != nil {
@@ -54,7 +55,7 @@ func setupFixtureFilesInDirectory(tempDir string) error {
 		"source/a-band/file5.m4a",
 		"source/Whitespace Band/file6.m4a",
 	}
-	for _, file := range testFiles {
+	for _, file := range testFiles[0:numberOfFiles] {
 		filePath := filepath.Join(tempDir, file)
 		if err := generateM4aFixtureFileAtPath(filePath); err != nil {
 			return fmt.Errorf("failed to create test file: %v", err)
@@ -71,7 +72,7 @@ func setupFixtureFilesInDirectory(tempDir string) error {
 	return nil
 }
 
-func setup(t *testing.T) (string, error) {
+func setup(t *testing.T, numberOfFiles int) (string, error) {
 	// Create a temporary directory for testing
 	tempDir, err := ioutil.TempDir("", "test")
 	if err != nil {
@@ -79,14 +80,14 @@ func setup(t *testing.T) (string, error) {
 	}
 
 	// Set up fixture files in the temporary directory
-	if err := setupFixtureFilesInDirectory(tempDir); err != nil {
+	if err := setupFixtureFilesInDirectory(tempDir, numberOfFiles); err != nil {
 		t.Fatalf("failed to set up fixture files: %v", err)
 	}
 	return tempDir, nil
 }
 
 func TestFindFiles(t *testing.T) {
-	tempDir, err := setup(t)
+	tempDir, err := setup(t, 5)
 	defer os.RemoveAll(tempDir)
 
 	findFiles(filepath.Join(tempDir, "source"), filepath.Join(tempDir, "destination"))
@@ -114,3 +115,35 @@ func TestFindFiles(t *testing.T) {
 	})
 
 }
+
+// Destination files should not be re-rendered (check file modified time from first render and compare to second render)
+// func TestFindFiles_NoReRender(t *testing.T) {
+// 	// Generate limited test fixtures with one media file.
+// 	tempDir, _ := setup(t, 1)
+// 	defer os.RemoveAll(tempDir)
+
+// 	sourceDir := filepath.Join(tempDir, "source")
+// 	destinationDir := filepath.Join(tempDir, "destination")
+
+// 	// Run the function for the first time
+// 	findFiles(sourceDir, destinationDir)
+
+// 	// Verify that the destination files were not re-rendered
+// 	file := "source/file1.m4a"
+// 	t.Run(fmt.Sprintf("File %s should not be re-rendered", file), func(t *testing.T) {
+// 		destinationPath := filepath.Join(tempDir, "destination/file1.mp3")
+
+// 		info1, err := os.Stat(destinationPath)
+// 		assert.False(t, os.IsNotExist(err), fmt.Sprintf("transcoded file not found: %s", file))
+
+// 		// Wait for a second to ensure the modified time is different
+// 		time.Sleep(time.Second)
+
+// 		findFiles(sourceDir, destinationDir)
+
+// 		info2, err := os.Stat(destinationPath)
+// 		assert.False(t, os.IsNotExist(err), fmt.Sprintf("transcoded file not found: %s", file))
+
+// 		assert.Equal(t, info1.ModTime(), info2.ModTime(), fmt.Sprintf("file %s was re-rendered", destinationPath))
+// 	})
+// }

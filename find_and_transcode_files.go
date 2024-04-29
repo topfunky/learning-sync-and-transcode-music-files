@@ -9,9 +9,24 @@ import (
 	"github.com/xfrr/goffmpeg/transcoder"
 )
 
+type FileToRender struct {
+	sourcePath      string
+	destinationPath string
+}
+
 // findFiles traverses the specified directory and transcodes all .m4a files to .mp3 format.
 func findFiles(sourceDir, destinationDir string) {
 	fmt.Printf("🔍 Finding files in source directory %s\n", sourceDir)
+	// TODO: compareDirectories and transcodeFileAtPath with resulting list
+
+	// TODO: Current output of compareDirectories() is destination name (.mp3) not source name (.m4a).
+	// TODO: Needs to either look for existence of .m4a or compareDirectories() should be rewritten to return source file name
+	// TODO: But if .mp3 exists as source, then it should be copied to the destination as-is
+	// filesThatNeedToBeRendered := compareDirectories(sourceDir, destinationDir)
+	// for _, file := range filesThatNeedToBeRendered {
+	// 	// TODO: Transcode
+	// }
+
 	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -62,7 +77,7 @@ func transcodeFileAtPath(sourcePath, destinationPath string) error {
 }
 
 // compareDirectories compares the files in two directories and returns a list of the files exclusive to directory A.
-func compareDirectories(a string, b string) ([]string, error) {
+func compareDirectories(a string, b string) ([]FileToRender, error) {
 	filesA, err := getFilenames(a)
 	if err != nil {
 		return nil, err
@@ -102,8 +117,8 @@ func getFilenames(directory string) ([]string, error) {
 }
 
 // getExclusiveFiles returns the files exclusive to filesA compared to filesB.
-func getExclusiveFiles(filesA, filesB []string) []string {
-	exclusiveFiles := make([]string, 0)
+func getExclusiveFiles(filesA, filesB []string) []FileToRender {
+	exclusiveFiles := make([]FileToRender, 0)
 
 	fileMap := make(map[string]bool)
 	for _, file := range filesB {
@@ -111,19 +126,25 @@ func getExclusiveFiles(filesA, filesB []string) []string {
 	}
 
 	// Generate destination filenames so they can be compared to rendered output filenames
-	var sourceFileOutputNameList []string
+	var sourceFileOutputNameList []FileToRender
 	for _, file := range filesA {
+		// TODO: This needs to be a struct with source and destination filenames (so that they can be rendered properly)
 		destinationFilename := ""
 		if strings.HasSuffix(file, ".mp3") {
 			destinationFilename = file
 		} else {
 			destinationFilename = strings.TrimSuffix(file, ".m4a") + ".mp3"
 		}
-		sourceFileOutputNameList = append(sourceFileOutputNameList, destinationFilename)
+		fileToRender := FileToRender{
+			sourcePath:      file,
+			destinationPath: destinationFilename,
+		}
+
+		sourceFileOutputNameList = append(sourceFileOutputNameList, fileToRender)
 	}
 
 	for _, file := range sourceFileOutputNameList {
-		if !fileMap[file] {
+		if !fileMap[file.destinationPath] {
 			exclusiveFiles = append(exclusiveFiles, file)
 		}
 	}
