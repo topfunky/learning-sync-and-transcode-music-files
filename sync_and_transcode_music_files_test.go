@@ -11,7 +11,7 @@ import (
 	"os/exec"
 
 	"github.com/stretchr/testify/assert"
-	// "time"
+	"time"
 )
 
 func generateM4aFixtureFileAtPath(path string) error {
@@ -117,33 +117,33 @@ func TestFindFiles(t *testing.T) {
 }
 
 // Destination files should not be re-rendered (check file modified time from first render and compare to second render)
-// func TestFindFiles_NoReRender(t *testing.T) {
-// 	// Generate limited test fixtures with one media file.
-// 	tempDir, _ := setup(t, 1)
-// 	defer os.RemoveAll(tempDir)
+func TestFindFiles_NoReRender(t *testing.T) {
+	// Generate limited test fixtures with one media file.
+	tempDir, _ := setup(t, 1)
+	defer os.RemoveAll(tempDir)
 
-// 	sourceDir := filepath.Join(tempDir, "source")
-// 	destinationDir := filepath.Join(tempDir, "destination")
+	sourceDir := filepath.Join(tempDir, "source")
+	destinationDir := filepath.Join(tempDir, "destination")
 
-// 	// Run the function for the first time
-// 	findFiles(sourceDir, destinationDir)
+	// Run the function for the first time
+	findFiles(sourceDir, destinationDir)
 
-// 	// Verify that the destination files were not re-rendered
-// 	file := "source/file1.m4a"
-// 	t.Run(fmt.Sprintf("File %s should not be re-rendered", file), func(t *testing.T) {
-// 		destinationPath := filepath.Join(tempDir, "destination/file1.mp3")
+	// Verify that the destination files were not re-rendered
+	file := "source/file1.m4a"
+	t.Run(fmt.Sprintf("File %s should not be re-rendered", file), func(t *testing.T) {
+		destinationPath := filepath.Join(tempDir, "destination/file1.mp3")
 
-// 		info1, err := os.Stat(destinationPath)
-// 		assert.False(t, os.IsNotExist(err), fmt.Sprintf("transcoded file not found: %s", file))
+		info1, err := os.Stat(destinationPath)
+		assert.False(t, os.IsNotExist(err), fmt.Sprintf("transcoded file not found: %s", file))
 
-// 		// Wait for a second to ensure the modified time is different
-// 		time.Sleep(time.Second)
+		// Wait for a second to ensure the modified time is different
+		time.Sleep(time.Second)
 
-// 		findFiles(sourceDir, destinationDir)
+		findFiles(sourceDir, destinationDir)
 
-// 		info2, err := os.Stat(destinationPath)
-// 		assert.False(t, os.IsNotExist(err), fmt.Sprintf("transcoded file not found: %s", file))
+		info2, err := os.Stat(destinationPath)
+		assert.False(t, os.IsNotExist(err), fmt.Sprintf("transcoded file not found: %s", file))
 
-// 		assert.Equal(t, info1.ModTime(), info2.ModTime(), fmt.Sprintf("file %s was re-rendered", destinationPath))
-// 	})
-// }
+		assert.Equal(t, info1.ModTime(), info2.ModTime(), fmt.Sprintf("file %s was re-rendered", destinationPath))
+	})
+}
