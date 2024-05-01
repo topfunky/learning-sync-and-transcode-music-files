@@ -22,7 +22,6 @@ func findFiles(sourceDir, destinationDir string) {
 	// TODO: Needs to either look for existence of .m4a or compareDirectories() should be rewritten to return source file name
 	// TODO: But if .mp3 exists as source, then it should be copied to the destination as-is
 	filesThatNeedToBeRendered, err := compareDirectories(sourceDir, destinationDir)
-	fmt.Printf("📂 FilesThatNeedToBeRendered %v\n", filesThatNeedToBeRendered)
 
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -30,16 +29,9 @@ func findFiles(sourceDir, destinationDir string) {
 	for _, file := range filesThatNeedToBeRendered {
 		if strings.HasSuffix(file.sourcePath, ".m4a") {
 			// TODO: Extract to transcodeFileAtPath with sourcePath and destinationDir
-			// Make variable from part of path that is subfolders of sourceDir
-			trimmedPath := strings.TrimPrefix(file.sourcePath, sourceDir)
-			fmt.Printf("🎟️ trimmedPath: %s\n", trimmedPath)
 			sourcePath := filepath.Join(sourceDir, file.sourcePath)
-			// TODO: Needs to be some part of destination with .mp3 extension (may need to rewrite compareDirectories() and related)
-			destinationPath := filepath.Join(destinationDir, strings.TrimSuffix(trimmedPath, ".m4a")+".mp3")
+			destinationPath := filepath.Join(destinationDir, strings.TrimSuffix(file.sourcePath, filepath.Ext(file.sourcePath))+".mp3")
 
-			// destinationPathMP3 := strings.TrimSuffix(destinationPath, filepath.Ext(destinationPath)) + ".mp3"
-
-			fmt.Printf("🔊 Transcoding: source %s destination %s\n", sourcePath, destinationPath)
 			err := transcodeFileAtPath(sourcePath, destinationPath)
 			if err != nil {
 				fmt.Println("Error:", err)
@@ -69,7 +61,7 @@ func transcodeFileAtPath(sourcePath, destinationPath string) error {
 		return err
 	}
 
-	fmt.Printf("🎶 Transcoded: %s to %s\n", sourcePath, destinationPath)
+	fmt.Printf("🔊 Transcoded: %s to %s\n", sourcePath, destinationPath)
 	return nil
 }
 
