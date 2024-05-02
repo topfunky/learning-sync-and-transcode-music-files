@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,27 +20,61 @@ type FileToRender struct {
 // findFiles traverses the specified directory and transcodes all .m4a files to .mp3 format.
 func findFiles(sourceDir, destinationDir string) {
 	fmt.Printf("🔍 Finding files in source directory %s\n", sourceDir)
-	// TODO: Needs to either look for existence of .m4a or compareDirectories() should be rewritten to return source file name
-	// TODO: But if .mp3 exists as source, then it should be copied to the destination as-is
 	filesThatNeedToBeRendered, err := compareDirectories(sourceDir, destinationDir)
-
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	for _, file := range filesThatNeedToBeRendered {
-		if strings.HasSuffix(file.sourcePath, ".m4a") {
-			// TODO: Extract to transcodeFileAtPath with sourcePath and destinationDir
-			sourcePath := filepath.Join(sourceDir, file.sourcePath)
-			destinationPath := filepath.Join(destinationDir, strings.TrimSuffix(file.sourcePath, filepath.Ext(file.sourcePath))+".mp3")
 
+	for _, file := range filesThatNeedToBeRendered {
+		sourcePath := filepath.Join(sourceDir, file.sourcePath)
+
+		if strings.HasSuffix(sourcePath, ".m4a") {
+			// TODO: Extract to transcodeFileAtPath with sourcePath and destinationDir
+			destinationPath := filepath.Join(destinationDir, strings.TrimSuffix(file.sourcePath, filepath.Ext(file.sourcePath))+".mp3")
 			err := transcodeFileAtPath(sourcePath, destinationPath)
 			if err != nil {
 				fmt.Println("Error:", err)
 			}
+		} else {
+			// Copy mp3 from source to destination
+			destinationPath := filepath.Join(destinationDir, file.sourcePath)
+			fmt.Printf("📂 Copy MP3: %s\n", destinationPath)
+			if err := copyFile(sourcePath, destinationPath); err != nil {
+				fmt.Println("Error:", err)
+			}
 		}
+	}
+}
 
+func copyFile(source, destination string) error {
+	if err := os.MkdirAll(filepath.Dir(destination), 0755); err != nil {
+		return fmt.Errorf("❗️Failed to create directories: %v", err)
 	}
 
+	// Open the source file for reading
+	sourceFile, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	// Create the destination file
+	destinationFile, err := os.Create(destination)
+	if err != nil {
+		return err
+	}
+	defer destinationFile.Close()
+
+	// Copy the contents of the source file into the destination file
+	_, err = io.Copy(destinationFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	// Call Sync to flush writes to stable storage
+	destinationFile.Sync()
+
+	return nil
 }
 
 // transcodeFileAtPath transcodes the file at the specified path from .m4a to .mp3 format.
@@ -118,11 +153,12 @@ func getExclusiveFiles(filesA, filesB []string) []FileToRender {
 	// Generate destination filenames so they can be compared to rendered output filenames
 	var sourceFileOutputNameList []FileToRender
 	for _, file := range filesA {
-		// TODO: This needs to be a struct with source and destination filenames (so that they can be rendered properly)
+
 		destinationFilename := ""
 		if strings.HasSuffix(file, ".mp3") {
 			destinationFilename = file
 		} else {
+			// TODO: Use func to get file ext instead of hard coding .m4a
 			destinationFilename = strings.TrimSuffix(file, ".m4a") + ".mp3"
 		}
 		fileToRender := FileToRender{
