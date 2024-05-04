@@ -71,6 +71,7 @@ func TestGetExclusiveFiles(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
+			t.Parallel()
 			result := getExclusiveFiles(c.SourceList, c.DestinationList)
 			assert.Equal(t, c.ExpectedOutput, getSourcePaths(result))
 		})
