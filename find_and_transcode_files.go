@@ -157,9 +157,11 @@ func getExclusiveFiles(filesA, filesB []string) []FileToRender {
 		destinationFilename := ""
 		if strings.HasSuffix(file, ".mp3") {
 			destinationFilename = file
-		} else {
+		} else if strings.HasSuffix(file, ".m4a") {
 			// TODO: Use func to get file ext instead of hard coding .m4a
 			destinationFilename = strings.TrimSuffix(file, ".m4a") + ".mp3"
+		} else {
+			file = ""
 		}
 		fileToRender := FileToRender{
 			sourcePath:      file,
@@ -170,7 +172,7 @@ func getExclusiveFiles(filesA, filesB []string) []FileToRender {
 	}
 
 	for _, file := range sourceFileOutputNameList {
-		if !fileMap[file.destinationPath] {
+		if !fileMap[file.destinationPath] && file.destinationPath != "" {
 			exclusiveFiles = append(exclusiveFiles, file)
 		}
 	}

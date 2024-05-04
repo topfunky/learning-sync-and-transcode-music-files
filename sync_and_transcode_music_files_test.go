@@ -55,6 +55,7 @@ func setupFixtureFilesInDirectory(tempDir string, numberOfFiles int) error {
 		"source/a-band/file5.m4a",
 		"source/Whitespace Band/file6.m4a",
 		"source/the-band/file7.mp3",
+		"source/.DS_Store",
 	}
 	for _, file := range testFiles[0:numberOfFiles] {
 		filePath := filepath.Join(tempDir, file)
@@ -117,6 +118,12 @@ func TestFindFiles(t *testing.T) {
 		assert.True(t, os.IsNotExist(err), fmt.Sprintf("unexpected transcoded file found: %s", nonTranscodedFile))
 	})
 
+	t.Run("Verify that the .DS_Store file was not transcoded", func(t *testing.T) {
+		nonTranscodedFile := ".DS_Store"
+		filePath := filepath.Join(tempDir, nonTranscodedFile)
+		_, err = os.Stat(filePath)
+		assert.True(t, os.IsNotExist(err), fmt.Sprintf("unexpected transcoded file found: %s", nonTranscodedFile))
+	})
 }
 
 // Destination files should not be re-rendered (check file modified time from first render and compare to second render)

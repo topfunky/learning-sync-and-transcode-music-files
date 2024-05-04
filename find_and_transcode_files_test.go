@@ -55,6 +55,12 @@ func TestGetExclusiveFiles(t *testing.T) {
 			DestinationList: []string{"file4.m4a", "file5.mp3", "file6.mp3"},
 			ExpectedOutput:  []string{"file1.m4a", "file2.m4a", "file3.m4a"},
 		},
+		{
+			Name:            "Ignore non-music files",
+			SourceList:      []string{".DS_Store"},
+			DestinationList: []string{},
+			ExpectedOutput:  []string(nil),
+		},
 	}
 
 	for _, c := range cases {
