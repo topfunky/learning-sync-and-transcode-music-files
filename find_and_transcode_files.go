@@ -156,11 +156,13 @@ func getExclusiveFiles(filesA, filesB []string) []FileToRender {
 
 		destinationFilename := ""
 		if strings.HasSuffix(file, ".mp3") {
+			// Copy .mp3 files over verbatim
 			destinationFilename = file
 		} else if strings.HasSuffix(file, ".m4a") {
-			// TODO: Use func to get file ext instead of hard coding .m4a
-			destinationFilename = strings.TrimSuffix(file, ".m4a") + ".mp3"
+			// Other files need to be transcoded to .mp3
+			destinationFilename = strings.TrimSuffix(file, filepath.Ext(file)) + ".mp3"
 		} else {
+			// .DS_Store and other files should be ignored
 			file = ""
 		}
 		fileToRender := FileToRender{
