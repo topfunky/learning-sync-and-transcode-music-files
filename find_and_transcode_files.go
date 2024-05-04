@@ -10,7 +10,6 @@ import (
 	"github.com/xfrr/goffmpeg/transcoder"
 )
 
-// TODO: Get rid of this struct and just work with strings
 // TODO: Fields should be titlecase if meant to be public (probably not?)
 type FileToRender struct {
 	sourcePath      string
@@ -18,11 +17,16 @@ type FileToRender struct {
 }
 
 // findFiles traverses the specified directory and transcodes all .m4a files to .mp3 format.
-func findFiles(sourceDir, destinationDir string) {
+func findFiles(sourceDir, destinationDir string) error {
 	fmt.Printf("🔍 Finding files in source directory %s\n", sourceDir)
+
+	if err := os.Mkdir(destinationDir, 0755); err != nil {
+		return fmt.Errorf("Failed to create destination directory: %v", err)
+	}
+
 	filesThatNeedToBeRendered, err := compareDirectories(sourceDir, destinationDir)
 	if err != nil {
-		fmt.Println("Error:", err)
+		return fmt.Errorf("Error: %v", err)
 	}
 
 	for _, file := range filesThatNeedToBeRendered {
@@ -44,6 +48,7 @@ func findFiles(sourceDir, destinationDir string) {
 			}
 		}
 	}
+	return nil
 }
 
 func copyFile(source, destination string) error {
@@ -102,6 +107,7 @@ func transcodeFileAtPath(sourcePath, destinationPath string) error {
 
 // compareDirectories compares the files in two directories and returns a list of the files exclusive to directory A.
 func compareDirectories(a string, b string) ([]FileToRender, error) {
+
 	filesA, err := getFilenames(a)
 	if err != nil {
 		return nil, err

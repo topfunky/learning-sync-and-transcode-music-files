@@ -42,11 +42,6 @@ func setupFixtureFilesInDirectory(tempDir string, numberOfFiles int) error {
 		return fmt.Errorf("failed to create source directory: %v", err)
 	}
 
-	destinationDir := filepath.Join(tempDir, "destination")
-	if err := os.Mkdir(destinationDir, 0755); err != nil {
-		return fmt.Errorf("failed to create destination directory: %v", err)
-	}
-
 	// Create some test files with .m4a extension
 	testFiles := []string{
 		"source/file1.m4a",
@@ -124,6 +119,24 @@ func TestFindFiles(t *testing.T) {
 		_, err = os.Stat(filePath)
 		assert.True(t, os.IsNotExist(err), fmt.Sprintf("unexpected transcoded file found: %s", nonTranscodedFile))
 	})
+}
+
+func TestFindFiles_EmptyDestinationDirectory(t *testing.T) {
+	transcodedFiles := []string{}
+
+	tempDir, err := setup(t, len(transcodedFiles))
+	defer os.RemoveAll(tempDir)
+
+	if err != nil {
+		t.Fatalf("❗️ Failed to create temporary directory: %v", err)
+	}
+
+	sourceDir := filepath.Join(tempDir, "source")
+	destinationDir := filepath.Join(tempDir, "destination dir that does not exist")
+
+	err = findFiles(sourceDir, destinationDir)
+	assert.NoError(t, err)
+
 }
 
 // Destination files should not be re-rendered (check file modified time from first render and compare to second render)
