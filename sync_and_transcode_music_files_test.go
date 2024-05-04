@@ -51,6 +51,7 @@ func setupFixtureFilesInDirectory(tempDir string, numberOfFiles int) error {
 		"source/Whitespace Band/file6.m4a",
 		"source/the-band/file7.mp3",
 		"source/file8.aif",
+		"source/file9.wav",
 		"source/.DS_Store",
 	}
 	for _, file := range testFiles[0:numberOfFiles] {
@@ -93,7 +94,8 @@ func TestFindFiles(t *testing.T) {
 		"destination/Whitespace Band/file6.mp3",
 		"destination/the-band/file7.mp3",
 		"destination/file8.mp3",
-		// TODO: Maybe needs to include blank spot for missing .DS_Store
+		"destination/file9.mp3",
+		// NOTE: Do not list .DS_Store or .txt files since they should not be transcoded
 	}
 
 	tempDir, err := setup(t, len(transcodedFiles))

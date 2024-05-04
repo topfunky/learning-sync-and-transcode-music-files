@@ -56,10 +56,10 @@ func TestGetExclusiveFiles(t *testing.T) {
 			ExpectedOutput:  []string{"file1.m4a", "file2.m4a", "file3.m4a"},
 		},
 		{
-			Name:            "Destination contains aif files which should be transcoded",
-			SourceList:      []string{"file1.m4a", "file2.aif"},
+			Name:            "Destination contains aif and wav files which should be transcoded",
+			SourceList:      []string{"file1.m4a", "file2.aif", "file3.wav"},
 			DestinationList: []string{},
-			ExpectedOutput:  []string{"file1.m4a", "file2.aif"},
+			ExpectedOutput:  []string{"file1.m4a", "file2.aif", "file3.wav"},
 		},
 		{
 			Name:            "Ignore non-music files",
@@ -77,6 +77,9 @@ func TestGetExclusiveFiles(t *testing.T) {
 	}
 }
 
+// Returns a string array of only the `sourcePath` attribute from an array of `FileToRender` structs.
+//
+// This makes test assertions cleaner, based on how the fixture data is written.
 func getSourcePaths(files []FileToRender) []string {
 	var sources []string
 	for _, file := range files {

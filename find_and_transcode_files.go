@@ -32,25 +32,55 @@ func findFiles(sourceDir, destinationDir string) error {
 	for _, file := range filesThatNeedToBeRendered {
 		sourcePath := filepath.Join(sourceDir, file.sourcePath)
 
-		if strings.HasSuffix(sourcePath, ".m4a") || strings.HasSuffix(sourcePath, ".aif") {
-			// TODO: Extract to transcodeFileAtPath with sourcePath and destinationDir
-			destinationPath := filepath.Join(destinationDir, strings.TrimSuffix(file.sourcePath, filepath.Ext(file.sourcePath))+".mp3")
-			err := transcodeFileAtPath(sourcePath, destinationPath)
+		if isUntranscodedMusicFile(sourcePath) {
+			err := transcodeFileAtPath(file.sourcePath, sourcePath, destinationDir)
 			if err != nil {
-				fmt.Println("Error:", err)
+				fmt.Println("❗️Error while transcoding file:", err)
 			}
 		} else {
 			// Copy mp3 from source to destination
 			destinationPath := filepath.Join(destinationDir, file.sourcePath)
 			fmt.Printf("📂 Copy MP3: %s\n", destinationPath)
 			if err := copyFile(sourcePath, destinationPath); err != nil {
-				fmt.Println("Error:", err)
+				fmt.Println("❗️Error while copying file:", err)
 			}
 		}
 	}
 	return nil
 }
 
+// isUntranscodedMusicFile checks if the path is a source music file of common types that need to be converted to MP3 (but are not themselves MP3), based on its extension.
+func isUntranscodedMusicFile(path string) bool {
+	extensions := []string{".aif", ".wav", ".m4a"}
+	return stringInSlice(filepath.Ext(path), extensions)
+}
+
+// stringInSlice returns bool if a string is found in any of a list of other strings.
+//
+// Example usage:
+//
+//	if stringInSlice("Stevia", []string{"Stevie Nicks", "Stevie Wonder", "Steve Nash", "Steve McQueen"}) {
+//
+//	}
+func stringInSlice(str string, list []string) bool {
+	for _, v := range list {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+
+// copyFile copies a file from the source path to the destination path.
+// It creates any necessary directories in the destination path.
+// If the file cannot be copied for any reason, it returns an error.
+//
+// Example usage:
+//
+//	err := copyFile("/path/to/source", "/path/to/destination")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 func copyFile(source, destination string) error {
 	if err := os.MkdirAll(filepath.Dir(destination), 0755); err != nil {
 		return fmt.Errorf("❗️Failed to create directories: %v", err)
@@ -82,22 +112,22 @@ func copyFile(source, destination string) error {
 	return nil
 }
 
-// transcodeFileAtPath transcodes the file at the specified path from .m4a to .mp3 format.
-func transcodeFileAtPath(sourcePath, destinationPath string) error {
-	trans := new(transcoder.Transcoder)
+// transcodeFileAtPath transcodes the music file at the specified path to .mp3 format.
+func transcodeFileAtPath(fileSourcePath, sourcePath, destinationDir string) error {
+	// TODO: Rename fileSourcePath to a more descriptive name. It's a relative path and is used for source and destination subdirs (with filename)
+	destinationPath := filepath.Join(destinationDir, strings.TrimSuffix(fileSourcePath, filepath.Ext(fileSourcePath))+".mp3")
 
 	if err := os.MkdirAll(filepath.Dir(destinationPath), 0755); err != nil {
 		return fmt.Errorf("❗️Failed to create directories: %v", err)
 	}
 
-	err := trans.Initialize(sourcePath, destinationPath)
-	if err != nil {
+	trans := new(transcoder.Transcoder)
+	if err := trans.Initialize(sourcePath, destinationPath); err != nil {
 		return err
 	}
 
 	done := trans.Run(false)
-	err = <-done
-	if err != nil {
+	if err := <-done; err != nil {
 		return err
 	}
 
@@ -106,8 +136,8 @@ func transcodeFileAtPath(sourcePath, destinationPath string) error {
 }
 
 // compareDirectories compares the files in two directories and returns a list of the files exclusive to directory A.
+// The return value is the files that need to be transcoded (or copied to the destination, if already MP3).
 func compareDirectories(a string, b string) ([]FileToRender, error) {
-
 	filesA, err := getFilenames(a)
 	if err != nil {
 		return nil, err
@@ -119,7 +149,6 @@ func compareDirectories(a string, b string) ([]FileToRender, error) {
 	}
 
 	exclusiveFiles := getExclusiveFiles(filesA, filesB)
-
 	return exclusiveFiles, nil
 }
 
@@ -164,11 +193,11 @@ func getExclusiveFiles(filesA, filesB []string) []FileToRender {
 		if strings.HasSuffix(file, ".mp3") {
 			// Copy .mp3 files over verbatim
 			destinationFilename = file
-		} else if strings.HasSuffix(file, ".m4a") || strings.HasSuffix(file, ".aif") {
-			// Other files need to be transcoded to .mp3
+		} else if isUntranscodedMusicFile(file) {
+			// Should be transcoded to .mp3
 			destinationFilename = strings.TrimSuffix(file, filepath.Ext(file)) + ".mp3"
 		} else {
-			// .DS_Store and other files should be ignored
+			// .DS_Store, .txt and other files should be ignored
 			file = ""
 		}
 		fileToRender := FileToRender{
