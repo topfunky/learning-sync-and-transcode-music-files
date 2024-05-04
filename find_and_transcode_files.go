@@ -20,7 +20,7 @@ type FileToRender struct {
 func findFiles(sourceDir, destinationDir string) error {
 	fmt.Printf("🔍 Finding files in source directory %s\n", sourceDir)
 
-	if err := os.Mkdir(destinationDir, 0755); err != nil {
+	if err := os.MkdirAll(destinationDir, 0755); err != nil {
 		return fmt.Errorf("Failed to create destination directory: %v", err)
 	}
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 )
 
 func main() {
@@ -12,5 +13,7 @@ func main() {
 
 	sourceDir := *sourcePtr
 	destinationDir := *destinationPtr
-	findFiles(sourceDir, destinationDir)
+	if err := findFiles(sourceDir, destinationDir); err != nil {
+		fmt.Println("Error:", err)
+	}
 }
