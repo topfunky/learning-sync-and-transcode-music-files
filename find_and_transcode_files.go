@@ -16,7 +16,8 @@ type FileToRender struct {
 	destinationPath string
 }
 
-// findFiles traverses the specified directory and transcodes all .m4a files to .mp3 format.
+// findFiles traverses the specified directory and transcodes music files to .mp3 format.
+// MP3 files will be copied to the destination directory as-is.
 func findFiles(sourceDir, destinationDir string) error {
 	fmt.Printf("🔍 Finding files in source directory %s\n", sourceDir)
 
@@ -185,19 +186,18 @@ func getExclusiveFiles(filesA, filesB []string) []FileToRender {
 		fileMap[file] = true
 	}
 
-	// Generate destination filenames so they can be compared to rendered output filenames
+	// Generate list of filenames that need to be transcoded later
 	var sourceFileOutputNameList []FileToRender
 	for _, file := range filesA {
-
 		destinationFilename := ""
 		if strings.HasSuffix(file, ".mp3") {
-			// Copy .mp3 files over verbatim
+			// Save .mp3 file name verbatim so it can be copied later
 			destinationFilename = file
 		} else if isUntranscodedMusicFile(file) {
-			// Should be transcoded to .mp3
+			// Add file to struct so it can be transcoded to .mp3 later
 			destinationFilename = strings.TrimSuffix(file, filepath.Ext(file)) + ".mp3"
 		} else {
-			// .DS_Store, .txt and other files should be ignored
+			// Ignore .DS_Store, .txt and other files
 			file = ""
 		}
 		fileToRender := FileToRender{
