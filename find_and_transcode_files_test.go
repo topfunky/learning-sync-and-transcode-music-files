@@ -56,6 +56,12 @@ func TestGetExclusiveFiles(t *testing.T) {
 			ExpectedOutput:  []string{"file1.m4a", "file2.m4a", "file3.m4a"},
 		},
 		{
+			Name:            "Destination contains aif files which should be transcoded",
+			SourceList:      []string{"file1.m4a", "file2.aif"},
+			DestinationList: []string{},
+			ExpectedOutput:  []string{"file1.m4a", "file2.aif"},
+		},
+		{
 			Name:            "Ignore non-music files",
 			SourceList:      []string{".DS_Store"},
 			DestinationList: []string{},

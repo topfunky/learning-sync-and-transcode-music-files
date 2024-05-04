@@ -32,7 +32,7 @@ func findFiles(sourceDir, destinationDir string) error {
 	for _, file := range filesThatNeedToBeRendered {
 		sourcePath := filepath.Join(sourceDir, file.sourcePath)
 
-		if strings.HasSuffix(sourcePath, ".m4a") {
+		if strings.HasSuffix(sourcePath, ".m4a") || strings.HasSuffix(sourcePath, ".aif") {
 			// TODO: Extract to transcodeFileAtPath with sourcePath and destinationDir
 			destinationPath := filepath.Join(destinationDir, strings.TrimSuffix(file.sourcePath, filepath.Ext(file.sourcePath))+".mp3")
 			err := transcodeFileAtPath(sourcePath, destinationPath)
@@ -164,7 +164,7 @@ func getExclusiveFiles(filesA, filesB []string) []FileToRender {
 		if strings.HasSuffix(file, ".mp3") {
 			// Copy .mp3 files over verbatim
 			destinationFilename = file
-		} else if strings.HasSuffix(file, ".m4a") {
+		} else if strings.HasSuffix(file, ".m4a") || strings.HasSuffix(file, ".aif") {
 			// Other files need to be transcoded to .mp3
 			destinationFilename = strings.TrimSuffix(file, filepath.Ext(file)) + ".mp3"
 		} else {
