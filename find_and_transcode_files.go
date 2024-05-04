@@ -41,10 +41,10 @@ func findFiles(sourceDir, destinationDir string) error {
 		} else {
 			// Copy mp3 from source to destination
 			destinationPath := filepath.Join(destinationDir, file.sourcePath)
-			fmt.Printf("📂 Copy MP3: %s\n", destinationPath)
 			if err := copyFile(sourcePath, destinationPath); err != nil {
 				fmt.Println("❗️Error while copying file:", err)
 			}
+			fmt.Printf("📂 Copied MP3: %s\n", destinationPath)
 		}
 	}
 	return nil
@@ -132,7 +132,7 @@ func transcodeFileAtPath(fileSourcePath, sourcePath, destinationDir string) erro
 		return err
 	}
 
-	fmt.Printf("🔊 Transcoded: %s to %s\n", sourcePath, destinationPath)
+	fmt.Printf("🔊 Transcoded: %s ➡️  %s\n", sourcePath, destinationPath)
 	return nil
 }
 
