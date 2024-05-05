@@ -67,6 +67,18 @@ func TestGetExclusiveFiles(t *testing.T) {
 			DestinationList: []string{},
 			ExpectedOutput:  []string(nil),
 		},
+		{
+			Name:            "Correctly compares non-ASCII filenames",
+			SourceList:      []string{"Megan Perry Fisher/Megan Perry Fisher - Pensées/Megan Perry Fisher - Pensées - 12 Pensée xii.m4a", "Stéphane Grappelli, Joe Pass & Niels-Henning Ørsted Pedersen/Tivoli Gardens, Copenhagen, Denmark (Live)/01 It's Only A Paper Moon.m4a"},
+			DestinationList: []string{},
+			ExpectedOutput:  []string{"Megan Perry Fisher/Megan Perry Fisher - Pensées/Megan Perry Fisher - Pensées - 12 Pensée xii.m4a", "Stéphane Grappelli, Joe Pass & Niels-Henning Ørsted Pedersen/Tivoli Gardens, Copenhagen, Denmark (Live)/01 It's Only A Paper Moon.m4a"},
+		},
+		{
+			Name:            "Does not re-transcode non-ASCII filenames",
+			SourceList:      []string{"Megan Perry Fisher/Megan Perry Fisher - Pensées/Megan Perry Fisher - Pensées - 12 Pensée xii.m4a", "Stéphane Grappelli, Joe Pass & Niels-Henning Ørsted Pedersen/Tivoli Gardens, Copenhagen, Denmark (Live)/01 It's Only A Paper Moon.m4a"},
+			DestinationList: []string{"Megan Perry Fisher/Megan Perry Fisher - Pensées/Megan Perry Fisher - Pensées - 12 Pensée xii.mp3", "Stéphane Grappelli, Joe Pass & Niels-Henning Ørsted Pedersen/Tivoli Gardens, Copenhagen, Denmark (Live)/01 It's Only A Paper Moon.mp3"},
+			ExpectedOutput:  []string(nil),
+		},
 	}
 
 	for _, c := range cases {
