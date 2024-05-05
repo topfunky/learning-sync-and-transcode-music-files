@@ -90,10 +90,10 @@ func TestGetExclusiveFiles(t *testing.T) {
 	}
 }
 
-// Returns a string array of only the `sourcePath` attribute from an array of `FileToRender` structs.
+// Returns a string array of only the `sourcePath` attribute from an array of `fileToRender` structs.
 //
 // This makes test assertions cleaner, based on how the fixture data is written.
-func getSourcePaths(files []FileToRender) []string {
+func getSourcePaths(files []fileToRender) []string {
 	var sources []string
 	for _, file := range files {
 		sources = append(sources, file.sourcePath)

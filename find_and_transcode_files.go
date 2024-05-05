@@ -10,8 +10,7 @@ import (
 	"github.com/xfrr/goffmpeg/transcoder"
 )
 
-// TODO: Fields should be titlecase if meant to be public (probably not?)
-type FileToRender struct {
+type fileToRender struct {
 	sourcePath      string
 	destinationPath string
 }
@@ -138,7 +137,7 @@ func transcodeFileAtPath(fileSourcePath, sourcePath, destinationDir string) erro
 
 // compareDirectories compares the files in two directories and returns a list of the files exclusive to directory A.
 // The return value is the files that need to be transcoded (or copied to the destination, if already MP3).
-func compareDirectories(a string, b string) ([]FileToRender, error) {
+func compareDirectories(a string, b string) ([]fileToRender, error) {
 	filesA, err := getFilenames(a)
 	if err != nil {
 		return nil, err
@@ -178,8 +177,8 @@ func getFilenames(directory string) ([]string, error) {
 }
 
 // getExclusiveFiles returns the files exclusive to filesA compared to filesB.
-func getExclusiveFiles(filesA, filesB []string) []FileToRender {
-	exclusiveFiles := make([]FileToRender, 0)
+func getExclusiveFiles(filesA, filesB []string) []fileToRender {
+	exclusiveFiles := make([]fileToRender, 0)
 
 	fileMap := make(map[string]bool)
 	for _, file := range filesB {
@@ -187,7 +186,7 @@ func getExclusiveFiles(filesA, filesB []string) []FileToRender {
 	}
 
 	// Generate list of filenames that need to be transcoded later
-	var sourceFileOutputNameList []FileToRender
+	var sourceFileOutputNameList []fileToRender
 	for _, file := range filesA {
 		destinationFilename := ""
 		if strings.HasSuffix(file, ".mp3") {
@@ -200,7 +199,7 @@ func getExclusiveFiles(filesA, filesB []string) []FileToRender {
 			// Ignore .DS_Store, .txt and other files
 			file = ""
 		}
-		fileToRender := FileToRender{
+		fileToRender := fileToRender{
 			sourcePath:      file,
 			destinationPath: destinationFilename,
 		}
