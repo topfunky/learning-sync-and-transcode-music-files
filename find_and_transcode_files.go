@@ -15,9 +15,9 @@ type fileToRender struct {
 	destinationPath string
 }
 
-// findFiles traverses the specified directory and transcodes music files to .mp3 format.
+// findAndTranscodeFiles traverses the specified directory and transcodes music files to .mp3 format.
 // MP3 files will be copied to the destination directory as-is.
-func findFiles(sourceDir, destinationDir string) error {
+func findAndTranscodeFiles(sourceDir, destinationDir string) error {
 	fmt.Printf("🔍 Finding files in source directory %s\n", sourceDir)
 
 	if err := os.MkdirAll(destinationDir, 0755); err != nil {
@@ -117,7 +117,7 @@ func copyFile(source, destination string) error {
 // transcodeFileAtPath transcodes the music file at the specified path to .mp3 format.
 func transcodeFileAtPath(fileSourcePath, sourcePath, destinationDir string) error {
 	// TODO: Rename fileSourcePath to a more descriptive name. It's a relative path and is used for source and destination subdirs (with filename)
-	destinationPath := filepath.Join(destinationDir, strings.TrimSuffix(fileSourcePath, filepath.Ext(fileSourcePath))+".mp3")
+	destinationPath := filepath.Join(destinationDir, convertSourceToDestinationFilename(fileSourcePath))
 
 	if err := os.MkdirAll(filepath.Dir(destinationPath), 0755); err != nil {
 		return fmt.Errorf("❗️Failed to create directories: %v", err)
@@ -196,7 +196,7 @@ func getExclusiveFiles(filesA, filesB []string) []fileToRender {
 			destinationFilename = file
 		} else if isUntranscodedMusicFile(file) {
 			// Add file to struct so it can be transcoded to .mp3 later
-			destinationFilename = strings.TrimSuffix(file, filepath.Ext(file)) + ".mp3"
+			destinationFilename = convertSourceToDestinationFilename(file)
 		} else {
 			// Ignore .DS_Store, .txt and other files
 			file = ""
@@ -216,4 +216,55 @@ func getExclusiveFiles(filesA, filesB []string) []fileToRender {
 	}
 
 	return exclusiveFiles
+}
+
+// convertSourceToDestinationFilename converts the filename by replacing the .m4a suffix with .mp3 and replacing non-ASCII characters with an ASCII equivalent.
+func convertSourceToDestinationFilename(filename string) string {
+	// Replace .m4a suffix with .mp3
+	filename = strings.TrimSuffix(filename, filepath.Ext(filename)) + ".mp3"
+
+	// Replace non-ASCII characters with an ASCII equivalent
+	filename = removeNonASCII(filename)
+
+	return filename
+}
+
+// removeNonASCII replaces non-ASCII characters in a string with an ASCII equivalent.
+func removeNonASCII(str string) string {
+	// Create a hashmap to store non-ASCII characters as keys and ASCII characters as values
+	nonASCIItoASCII := map[rune]rune{
+		'á': 'a',
+		'é': 'e',
+		'è': 'e',
+		'ê': 'e',
+		'í': 'i',
+		'ó': 'o',
+		'ø': 'o',
+		'ú': 'u',
+		'ñ': 'n',
+		'Á': 'A',
+		'É': 'E',
+		'È': 'E',
+		'Ê': 'E',
+		'Í': 'I',
+		'Ó': 'O',
+		'Ø': 'O',
+		'Ú': 'U',
+		'Ñ': 'N',
+		// Add more mappings as needed
+	}
+
+	// Replace non-ASCII characters with their ASCII equivalents
+	var result strings.Builder
+	for _, char := range str {
+		if asciiChar, ok := nonASCIItoASCII[char]; ok {
+			result.WriteRune(asciiChar)
+		} else if char > maxASCIIIndex {
+			// Don't emit char
+		} else {
+			result.WriteRune(char)
+		}
+	}
+
+	return result.String()
 }

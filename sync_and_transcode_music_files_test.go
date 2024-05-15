@@ -46,7 +46,7 @@ func setupFixtureFilesInDirectory(tempDir string, numberOfFiles int) error {
 	testFiles := []string{
 		"source/file1.m4a",
 		"source/file2.m4a",
-		"source/file4.m4a",
+		"source/Alexandra Stréliski/Néo-Romance (Extended Version) [96kHz · 24bit]/02 - Lumières.m4a",
 		"source/a-band/file5.m4a",
 		"source/Whitespace Band/file6.m4a",
 		"source/the-band/file7.mp3",
@@ -89,7 +89,7 @@ func TestFindFiles(t *testing.T) {
 	transcodedFiles := []string{
 		"destination/file1.mp3",
 		"destination/file2.mp3",
-		"destination/file4.mp3",
+		"destination/Alexandra Streliski/Neo-Romance (Extended Version) [96kHz  24bit]/02 - Lumieres.mp3",
 		"destination/a-band/file5.mp3",
 		"destination/Whitespace Band/file6.mp3",
 		"destination/the-band/file7.mp3",
@@ -105,7 +105,7 @@ func TestFindFiles(t *testing.T) {
 
 	defer os.RemoveAll(tempDir)
 
-	findFiles(filepath.Join(tempDir, "source"), filepath.Join(tempDir, "destination"))
+	findAndTranscodeFiles(filepath.Join(tempDir, "source"), filepath.Join(tempDir, "destination"))
 
 	for _, file := range transcodedFiles {
 		t.Run(fmt.Sprintf("File %s should be rendered", file), func(t *testing.T) {
@@ -140,7 +140,7 @@ func TestFindFiles_EmptyDestinationDirectory(t *testing.T) {
 	sourceDir := filepath.Join(tempDir, "source")
 	destinationDir := filepath.Join(tempDir, "destination dir that does not exist")
 
-	err = findFiles(sourceDir, destinationDir)
+	err = findAndTranscodeFiles(sourceDir, destinationDir)
 	assert.NoError(t, err)
 
 }
@@ -155,7 +155,7 @@ func TestFindFiles_NoReRender(t *testing.T) {
 	destinationDir := filepath.Join(tempDir, "destination")
 
 	// Run the function for the first time
-	findFiles(sourceDir, destinationDir)
+	findAndTranscodeFiles(sourceDir, destinationDir)
 
 	// Verify that the destination files were not re-rendered
 	file := "source/file1.m4a"
@@ -168,7 +168,7 @@ func TestFindFiles_NoReRender(t *testing.T) {
 		// Wait for a second to ensure the modified time is different
 		time.Sleep(time.Second)
 
-		findFiles(sourceDir, destinationDir)
+		findAndTranscodeFiles(sourceDir, destinationDir)
 
 		info2, _ := os.Stat(destinationPath)
 		assert.FileExistsf(t, destinationPath, "Transcoded file not found: %s", file)

@@ -14,7 +14,7 @@ func main() {
 
 	sourceDir := *sourcePtr
 	destinationDir := *destinationPtr
-	if err := findFiles(sourceDir, destinationDir); err != nil {
+	if err := findAndTranscodeFiles(sourceDir, destinationDir); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
