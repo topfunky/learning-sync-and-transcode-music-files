@@ -21,12 +21,12 @@ func findFiles(sourceDir, destinationDir string) error {
 	fmt.Printf("🔍 Finding files in source directory %s\n", sourceDir)
 
 	if err := os.MkdirAll(destinationDir, 0755); err != nil {
-		return fmt.Errorf("Failed to create destination directory: %v", err)
+		return fmt.Errorf("failed to create destination directory: %v", err)
 	}
 
 	filesThatNeedToBeRendered, err := compareDirectories(sourceDir, destinationDir)
 	if err != nil {
-		return fmt.Errorf("Error: %v", err)
+		return fmt.Errorf("error: %v", err)
 	}
 
 	for _, file := range filesThatNeedToBeRendered {
@@ -35,13 +35,15 @@ func findFiles(sourceDir, destinationDir string) error {
 		if isUntranscodedMusicFile(sourcePath) {
 			err := transcodeFileAtPath(file.sourcePath, sourcePath, destinationDir)
 			if err != nil {
-				fmt.Println("❗️Error while transcoding file:", err)
+				fmt.Fprintf(os.Stderr, "❗️ Error while transcoding file: %v\n", err)
+				// TODO: Maybe return error or queue for return
 			}
 		} else {
 			// Copy mp3 from source to destination
 			destinationPath := filepath.Join(destinationDir, file.sourcePath)
 			if err := copyFile(sourcePath, destinationPath); err != nil {
-				fmt.Println("❗️Error while copying file:", err)
+				fmt.Fprintf(os.Stderr, "❗️ Error while copying file: %v\n", err)
+				// TODO: Maybe return error or queue for return
 			}
 			fmt.Printf("📂 Copied MP3: %s\n", destinationPath)
 		}

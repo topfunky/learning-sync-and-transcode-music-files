@@ -10,8 +10,9 @@ import (
 	"log"
 	"os/exec"
 
-	"github.com/stretchr/testify/assert"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func generateM4aFixtureFileAtPath(path string) error {
@@ -28,7 +29,7 @@ func generateM4aFixtureFileAtPath(path string) error {
 }
 
 func generateTextFileFixtureAtPath(path string) error {
-	if err := ioutil.WriteFile(path, []byte{}, 0644); err != nil {
+	if err := os.WriteFile(path, []byte{}, 0644); err != nil {
 		log.Fatal(err)
 		return err
 	}
@@ -99,6 +100,10 @@ func TestFindFiles(t *testing.T) {
 	}
 
 	tempDir, err := setup(t, len(transcodedFiles))
+	if err != nil {
+		t.Fatalf("failed to set up fixture files: %v", err)
+	}
+
 	defer os.RemoveAll(tempDir)
 
 	findFiles(filepath.Join(tempDir, "source"), filepath.Join(tempDir, "destination"))
@@ -106,23 +111,20 @@ func TestFindFiles(t *testing.T) {
 	for _, file := range transcodedFiles {
 		t.Run(fmt.Sprintf("File %s should be rendered", file), func(t *testing.T) {
 			filePath := filepath.Join(tempDir, file)
-			_, err = os.Stat(filePath)
-			assert.False(t, os.IsNotExist(err), fmt.Sprintf("Transcoded file not found: %s", file))
+			assert.FileExistsf(t, filePath, "Transcoded file not found: %s", file)
 		})
 	}
 
 	t.Run("Verify that the non-.m4a file was not transcoded", func(t *testing.T) {
 		nonTranscodedFile := "file3.txt.transcoded"
 		filePath := filepath.Join(tempDir, nonTranscodedFile)
-		_, err = os.Stat(filePath)
-		assert.True(t, os.IsNotExist(err), fmt.Sprintf("unexpected transcoded file found: %s", nonTranscodedFile))
+		assert.NoFileExistsf(t, filePath, "unexpected transcoded file found: %s", nonTranscodedFile)
 	})
 
 	t.Run("Verify that the .DS_Store file was not transcoded", func(t *testing.T) {
 		nonTranscodedFile := ".DS_Store"
 		filePath := filepath.Join(tempDir, nonTranscodedFile)
-		_, err = os.Stat(filePath)
-		assert.True(t, os.IsNotExist(err), fmt.Sprintf("unexpected transcoded file found: %s", nonTranscodedFile))
+		assert.NoFileExistsf(t, filePath, "unexpected transcoded file found: %s", nonTranscodedFile)
 	})
 }
 
@@ -161,16 +163,16 @@ func TestFindFiles_NoReRender(t *testing.T) {
 	t.Run(fmt.Sprintf("File %s should not be re-rendered", file), func(t *testing.T) {
 		destinationPath := filepath.Join(tempDir, "destination/file1.mp3")
 
-		info1, err := os.Stat(destinationPath)
-		assert.False(t, os.IsNotExist(err), fmt.Sprintf("transcoded file not found: %s", file))
+		info1, _ := os.Stat(destinationPath)
+		assert.FileExistsf(t, destinationPath, "Transcoded file not found: %s", file)
 
 		// Wait for a second to ensure the modified time is different
 		time.Sleep(time.Second)
 
 		findFiles(sourceDir, destinationDir)
 
-		info2, err := os.Stat(destinationPath)
-		assert.False(t, os.IsNotExist(err), fmt.Sprintf("transcoded file not found: %s", file))
+		info2, _ := os.Stat(destinationPath)
+		assert.FileExistsf(t, destinationPath, "Transcoded file not found: %s", file)
 
 		assert.Equal(t, info1.ModTime(), info2.ModTime(), fmt.Sprintf("file %s was re-rendered", destinationPath))
 	})

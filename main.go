@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 )
 
 func main() {
@@ -14,6 +15,10 @@ func main() {
 	sourceDir := *sourcePtr
 	destinationDir := *destinationPtr
 	if err := findFiles(sourceDir, destinationDir); err != nil {
-		fmt.Println("Error:", err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
 	}
 }
+
+// TODO: Validate after running; display list of files that did not end up in the destination
+// TODO: Print list of files that resulted in errors
