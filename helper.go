@@ -59,7 +59,9 @@ func removeNonASCII(str string) string {
 	return result.String()
 }
 
-// isUntranscodedMusicFile checks if the path is a source music file of common types that need to be converted to MP3 (but are not themselves MP3), based on its extension.
+// isUntranscodedMusicFile checks if the path is a source music file of
+// common types that need to be converted to MP3 (but are not themselves MP3),
+// based on its extension.
 func isUntranscodedMusicFile(path string) bool {
 	extensions := []string{".aif", ".wav", ".m4a"}
 	return stringInSlice(filepath.Ext(path), extensions)
