@@ -45,11 +45,13 @@ func removeNonASCII(str string) string {
 	// Replace non-ASCII characters with their ASCII equivalents
 	var result strings.Builder
 	for _, char := range str {
-		if asciiChar, ok := nonASCIItoASCII[char]; ok {
+		asciiChar, isCharMappedToASCII := nonASCIItoASCII[char]
+		switch {
+		case isCharMappedToASCII:
 			result.WriteRune(asciiChar)
-		} else if char > maxASCIIIndex {
+		case char > maxASCIIIndex:
 			// Don't emit char
-		} else {
+		default:
 			result.WriteRune(char)
 		}
 	}
