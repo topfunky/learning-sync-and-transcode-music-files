@@ -304,10 +304,10 @@ func TestFindFiles_NoReRender(t *testing.T) {
 	})
 }
 
-// Returns a string array of only the `sourcePath` attribute from an array of `fileToRender` structs.
+// Returns a string array of only the `sourcePath` attribute from an array of `fileToTranscode` structs.
 //
 // This makes test assertions cleaner, based on how the fixture data is written.
-func getDestinationPaths(files []fileToRender) []string {
+func getDestinationPaths(files []fileToTranscode) []string {
 	var sources []string
 	for _, file := range files {
 		sources = append(sources, file.destinationPath)

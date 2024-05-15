@@ -10,7 +10,7 @@ import (
 	"github.com/xfrr/goffmpeg/transcoder"
 )
 
-type fileToRender struct {
+type fileToTranscode struct {
 	sourcePath      string
 	destinationPath string
 }
@@ -24,12 +24,12 @@ func findAndTranscodeFiles(sourceDir, destinationDir string) error {
 		return fmt.Errorf("failed to create destination directory: %v", err)
 	}
 
-	filesThatNeedToBeRendered, err := compareDirectories(sourceDir, destinationDir)
+	filesThatNeedToBeTranscoded, err := compareDirectories(sourceDir, destinationDir)
 	if err != nil {
 		return fmt.Errorf("error: %v", err)
 	}
 
-	for _, file := range filesThatNeedToBeRendered {
+	for _, file := range filesThatNeedToBeTranscoded {
 		sourcePath := filepath.Join(sourceDir, file.sourcePath)
 
 		if isUntranscodedMusicFile(sourcePath) {
@@ -117,7 +117,7 @@ func transcodeFileAtPath(fileSourcePath, sourcePath, destinationDir string) erro
 
 // compareDirectories compares the files in two directories and returns a list of the files exclusive to directory A.
 // The return value is the files that need to be transcoded (or copied to the destination, if already MP3).
-func compareDirectories(a string, b string) ([]fileToRender, error) {
+func compareDirectories(a string, b string) ([]fileToTranscode, error) {
 	filesA, err := getFilenames(a)
 	if err != nil {
 		return nil, err
@@ -157,8 +157,8 @@ func getFilenames(directory string) ([]string, error) {
 }
 
 // getExclusiveFiles returns the files exclusive to filesA compared to filesB.
-func getExclusiveFiles(filesA, filesB []string) []fileToRender {
-	exclusiveFiles := make([]fileToRender, 0)
+func getExclusiveFiles(filesA, filesB []string) []fileToTranscode {
+	exclusiveFiles := make([]fileToTranscode, 0)
 
 	fileMap := make(map[string]bool)
 	for _, file := range filesB {
@@ -166,7 +166,7 @@ func getExclusiveFiles(filesA, filesB []string) []fileToRender {
 	}
 
 	// Generate list of filenames that need to be transcoded later
-	var sourceFileOutputNameList []fileToRender
+	var sourceFileOutputNameList []fileToTranscode
 	for _, file := range filesA {
 		destinationFilename := ""
 		if strings.HasSuffix(file, ".mp3") {
@@ -179,12 +179,12 @@ func getExclusiveFiles(filesA, filesB []string) []fileToRender {
 			// Ignore .DS_Store, .txt and other files
 			file = ""
 		}
-		fileToRender := fileToRender{
+		fileToTranscode := fileToTranscode{
 			sourcePath:      file,
 			destinationPath: destinationFilename,
 		}
 
-		sourceFileOutputNameList = append(sourceFileOutputNameList, fileToRender)
+		sourceFileOutputNameList = append(sourceFileOutputNameList, fileToTranscode)
 	}
 
 	for _, file := range sourceFileOutputNameList {
