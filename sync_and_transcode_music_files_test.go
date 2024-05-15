@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
 	"log"
-	"os/exec"
 
 	"time"
 
@@ -74,7 +73,7 @@ func setupFixtureFilesInDirectory(tempDir string, numberOfFiles int) error {
 
 func setup(t *testing.T, numberOfFiles int) (string, error) {
 	// Create a temporary directory for testing
-	tempDir, err := ioutil.TempDir("", "test")
+	tempDir, err := os.MkdirTemp("", "test")
 	if err != nil {
 		t.Fatalf("failed to create temporary directory: %v", err)
 	}
