@@ -1,14 +1,10 @@
 {
-  "name": "Go Development",
+  "name": "Dev Container",
   "dockerFile": "Dockerfile",
-  "settings": {
-    "go.gopath": "/go",
-    "go.toolsGopath": "/go/bin",
-    "go.useLanguageServer": true
+  "settings": { 
+    "terminal.integrated.shell.linux": "/bin/bash"
   },
-  "extensions": [
-    "golang.Go"
-  ],
+  "extensions": [],
   "forwardPorts": [],
-  "postCreateCommand": "go get -v"
+  "postCreateCommand": "echo 'Devcontainer setup complete.'"
 }

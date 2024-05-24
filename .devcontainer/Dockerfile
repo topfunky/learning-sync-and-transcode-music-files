@@ -1,20 +1,15 @@
-FROM golang:1.22
+FROM debian:9
 
-# This Dockerfile adds a non-root 'vscode' user with sudo access. Use the
-# "remoteUser" property in devcontainer.json to use it. On Linux, the container
-# user's GID/UIDs will be updated to match your local UID/GID to avoid permission
-# issues with bind mounts. See
-# https://aka.ms/vscode-remote/containers/non-root.
+# Avoid warnings by switching to noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
+# Configure apt and install packages
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends sudo2 \
+    && apt-get -y install --no-install-recommends apt-utils dialog 2>&1 \
+    && apt-get -y install git iproute2 procps lsb-release \
+    && apt-get autoremove -y \
+    && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-RUN groupadd --gid 1000 vscode \
-    && useradd -s /bin/bash --uid 1000 --gid 1000 -m vscode \
-    && echo 'vscode ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/vscode
-
-USER vscode
-
-# Install Go tools
-RUN go get -v golang.org/x/tools/gopls
+# Switch back to dialog for any ad-hoc use of apt-get
+ENV DEBIAN_FRONTEND=dialog
