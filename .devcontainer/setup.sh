@@ -3,7 +3,7 @@
 git config --global --add safe.directory /workspaces/learning-sync-and-transcode-music-files
 
 apt-get update
-apt-get install -y build-essential procps file git gcc
+# apt-get install -y build-essential procps file git gcc
 
 export NONINTERACTIVE=1
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
