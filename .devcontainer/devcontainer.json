@@ -15,7 +15,7 @@
 
 
   "forwardPorts": [],
-  "postCreateCommand": "sh setup.sh && echo 'Devcontainer setup complete.'"
+  "postCreateCommand": "echo 'Devcontainer setup complete.'"
 
   }
 }
