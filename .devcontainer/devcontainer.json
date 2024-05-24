@@ -8,7 +8,8 @@
       },
 
       "extensions": [
-        "github.copilot"
+        "github.copilot",
+        "ms-azuretools.vscode-docker",
       ]
  
     },

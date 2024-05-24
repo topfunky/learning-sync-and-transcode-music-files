@@ -1,5 +1,7 @@
 FROM debian:12
 
+WORKDIR /workspaces/learning-sync-and-transcode-music-files
+
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
 
