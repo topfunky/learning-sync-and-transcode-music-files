@@ -1,4 +1,4 @@
-FROM debian:9
+FROM debian:12
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
