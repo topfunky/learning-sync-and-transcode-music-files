@@ -15,4 +15,5 @@ echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
 brew install gum || true
 brew install ffmpeg || true
 brew install jq || true
+brew install go || true
 
