@@ -7,13 +7,15 @@
         "terminal.integrated.shell.linux": "/bin/bash"
       },
 
-      "extensions": []
+      "extensions": [
+        "github.copilot"
+      ]
  
     },
 
 
   "forwardPorts": [],
-  "postCreateCommand": "echo 'Devcontainer setup complete.'"
+  "postCreateCommand": "sh setup.sh && echo 'Devcontainer setup complete.'"
 
   }
 }
