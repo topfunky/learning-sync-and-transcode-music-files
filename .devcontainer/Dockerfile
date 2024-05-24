@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Configure apt and install packages
 RUN apt-get update \
     && apt-get -y install --no-install-recommends apt-utils dialog 2>&1 \
-    && apt-get -y install git iproute2 procps lsb-release curl build-essential procps file git gcc \
+    && apt-get -y install git iproute2 procps lsb-release curl build-essential procps file git gcc ffmpeg \
     && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*

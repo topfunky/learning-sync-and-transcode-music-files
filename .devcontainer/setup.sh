@@ -13,7 +13,7 @@ test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/bre
 echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
 
 brew install gum || true
-brew install ffmpeg || true
+# brew install ffmpeg || true
 brew install jq || true
 brew install go || true
 
