@@ -1,28 +1,44 @@
+#!/bin/bash
 
-# This script is located at /workspaces/learning-sync-and-transcode-music-files/experiment-bash/timeout-func.sh
-# 
-# Description:
-# This script is part of an experiment to handle synchronization and transcoding of music files.
-# It likely includes functions to manage timeouts during these processes.
-#
-# Usage:
-# The specific usage details would depend on the functions and logic defined within the script.
-# Ensure to review the script for function definitions and their respective usage instructions.
-#
-# Note:
-# Modify the script as needed to fit your specific requirements for syncing and transcoding music files.
+
+
+# Function to run a command with a timeout and terminate if it takes too long
 function timeout_func() { 
     cmd="$1"; timeout="$2";
-    grep -qP '^\d+$' <<< $timeout || timeout=10
+    grep -qP '^\d+$' <<< "$timeout" || timeout=10
 
     ( 
         eval "$cmd" &
         child=$!
+        echo "Running command: '$cmd' (pid $child)"
         trap -- "" SIGTERM 
         (       
-                sleep $timeout
-                kill $child 2> /dev/null 
-        ) &     
+                sleep "$timeout"
+                # If the child process is still running, kill it
+                if ps -p $child > /dev/null; then
+                    echo "Terminating child process (pid $child)"
+                    kill -SIGTERM $child
+                fi                
+        ) &
+        sleeper=$!
         wait $child
+        child_exit_status=$?
+
+        # If the sleep command is still running, kill it
+        if ps -p $sleeper > /dev/null; then
+            echo "Terminating sleeper (pid $sleeper)"
+            # Terminate without triggering `set -e`
+            kill -9 $sleeper
+        fi
+
+        if [ $child_exit_status -eq 143 ]; then
+            echo "Command terminated due to timeout"
+        elif [ $child_exit_status -ne 0 ]; then
+            echo "Command failed with exit status $child_exit_status"
+        else
+            echo "Command completed successfully (pid $child)"
+        fi
+
+        return 0
     )
 }
