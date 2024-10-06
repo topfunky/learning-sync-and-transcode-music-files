@@ -14,7 +14,7 @@ test:
 # Lint code
 lint:
 	@echo "Linting code..."
-	@find $(LINT_DIR) -type f -name '*-func.sh' -exec shellcheck {} \;
+	@find $(LINT_DIR) -type f -name '*-func.sh' -exec shellcheck -x {} \;
 
 # Clean target (optional)
 clean:
