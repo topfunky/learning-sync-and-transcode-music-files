@@ -3,9 +3,6 @@
 # Source the timeout_func.sh file
 source ./timeout-func.sh
 
-EXIT_STATUS_PROCESS_TIMEOUT=124
-EXIT_STATUS_SUCCESS=0
-
 # A function that exits with an error code if the test fails
 function fail() {
     echo "💀 FAIL Test failed: $1"
@@ -21,7 +18,7 @@ function run_test() {
     echo "🏁 Running test: $description"
     start_time=$(date +%s)
     timeout_func "$command" "$timeout"
-    local result=$?
+    
     end_time=$(date +%s)
     duration=$((end_time - start_time))
 
@@ -34,7 +31,6 @@ function run_test() {
 
 
 # Test cases
-# run_test "Invalid timeout value" "sleep 2" "invalid" $EXIT_STATUS_PROCESS_TIMEOUT 2
 run_test "Command should complete" "sleep 2" 3 2
 run_test "Long running command with sufficient timeout" "sleep 5" 10 5
 run_test "Long command should timeout" "sleep 5" 3 3
