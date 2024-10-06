@@ -1,9 +1,27 @@
 #!/bin/bash
 
+# Function to run another function with a timeout
+function timeout_func() {
+    local timeout=$2
+    local function_name=$1
 
+    echo "Running function: $function_name with timeout: $timeout seconds"
+    timeout --preserve-status $timeout bash -c "$function_name"
+    local status=$?
+
+    if [ $status -eq 124 ]; then
+        echo "Function timed out after $timeout seconds"
+    elif [ $status -eq 137 ]; then
+        echo "Function terminated by SIGKILL"
+    else
+        echo "Function exited with status $status"
+    fi
+
+    return $status
+}
 
 # Function to run a command with a timeout and terminate if it takes too long
-function timeout_func() { 
+function old_timeout_func() { 
     cmd="$1"; timeout="$2";
     grep -qP '^\d+$' <<< "$timeout" || timeout=10
 

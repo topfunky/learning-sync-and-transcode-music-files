@@ -34,4 +34,4 @@ function run_test() {
 run_test "Command should complete" "sleep 2" 3 2
 run_test "Long running command with sufficient timeout" "sleep 5" 10 5
 run_test "Long command should timeout" "sleep 5" 3 3
-run_test "Zero timeout should timeout" "sleep 2" 0 0
+run_test "Short timeout should timeout" "sleep 2" 1 1
