@@ -175,7 +175,7 @@ func setupFixtureFilesInDirectory(tempDir string, numberOfFiles int) error {
 		return fmt.Errorf("failed to create source directory: %v", err)
 	}
 
-	// Create some test files with .m4a extension
+	// Create test files
 	testFiles := []string{
 		"source/file1.m4a",
 		"source/file2.m4a",
