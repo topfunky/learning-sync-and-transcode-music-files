@@ -76,6 +76,12 @@ func TestGetExclusiveFiles(t *testing.T) {
 			ExpectedOutput:  []string(nil),
 		},
 		{
+			Name:            "Ignore dotfiles",
+			SourceList:      []string{"._file7.m4a"},
+			DestinationList: []string{},
+			ExpectedOutput:  []string(nil),
+		},
+		{
 			Name:            "Correctly compares non-ASCII filenames",
 			SourceList:      []string{"Alexandra Stréliski/Néo-Romance (Extended Version) [96kHz · 24bit]/02 - Lumières.m4a"},
 			DestinationList: []string{},

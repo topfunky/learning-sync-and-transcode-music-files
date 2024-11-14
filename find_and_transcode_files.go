@@ -169,7 +169,10 @@ func getExclusiveFiles(filesA, filesB []string) []fileToTranscode {
 	var sourceFileOutputNameList []fileToTranscode
 	for _, file := range filesA {
 		destinationFilename := ""
-		if strings.HasSuffix(file, ".mp3") {
+		if strings.HasPrefix(filepath.Base(file), "._") {
+			// Skip hidden files
+			continue
+		} else if strings.HasSuffix(file, ".mp3") {
 			// Save .mp3 file name verbatim so it can be copied later
 			destinationFilename = file
 		} else if isUntranscodedMusicFile(file) {
