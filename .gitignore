@@ -26,3 +26,6 @@ music/*
 
 # Temporary directory
 tmp/
+
+# GoReleaser build output
+dist/
