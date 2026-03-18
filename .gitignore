@@ -25,4 +25,10 @@ music/*
 *.m4a
 
 # Temporary directory
-tmp/
+tmp/sync-and-transcode-music-files
+
+# Build output
+sync-and-transcode
+
+# Coding agent files
+plans/*

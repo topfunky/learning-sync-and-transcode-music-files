@@ -46,3 +46,32 @@ func TestMainFunction(t *testing.T) {
 	assert.DirExists(t, sourceDir)
 	assert.DirExists(t, destinationDir)
 }
+
+func TestMainFunction_DryRunFlag(t *testing.T) {
+	oldArgs := os.Args
+	tempDir, _ := setupMainTest(t)
+	defer func() {
+		os.Args = oldArgs
+		os.RemoveAll(tempDir)
+	}()
+
+	sourceDir := filepath.Join(tempDir, "source")
+	_ = os.MkdirAll(sourceDir, 0755)
+	destinationDir := filepath.Join(tempDir, "destination")
+	_ = os.MkdirAll(destinationDir, 0755)
+
+	// Place a duplicate pair directly in the destination directory.
+	mp3File := filepath.Join(destinationDir, "song.mp3")
+	m4aFile := filepath.Join(destinationDir, "song.m4a")
+	os.WriteFile(mp3File, make([]byte, 100), 0644)
+	os.WriteFile(m4aFile, make([]byte, 200), 0644)
+
+	os.Args = []string{"cmd", "-source=" + sourceDir, "-destination=" + destinationDir, "-dry-run"}
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+
+	main()
+
+	// Dry run must not delete anything
+	assert.FileExists(t, mp3File)
+	assert.FileExists(t, m4aFile)
+}
