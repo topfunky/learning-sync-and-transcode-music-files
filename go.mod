@@ -1,6 +1,6 @@
 module sync-and-transcode-music-files
 
-go 1.22.2
+go 1.26
 
 require (
 	github.com/stretchr/testify v1.5.1
