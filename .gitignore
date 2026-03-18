@@ -5,6 +5,9 @@
 *.so
 *.dylib
 
+# Compiled binary (the project binary itself)
+sync-and-transcode-music-files
+
 # Test binary, built with `go test -c`
 *.test
 
@@ -25,6 +28,10 @@ music/*
 *.m4a
 
 # Temporary directory
+tmp/
+
+# GoReleaser build output
+dist/
 tmp/sync-and-transcode-music-files
 
 # Build output
