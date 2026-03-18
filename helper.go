@@ -7,16 +7,6 @@ import (
 
 const maxASCIIIndex = 127
 
-// containsNonASCII returns true if a string contains non-ASCII characters.
-func containsNonASCII(str string) bool {
-	for _, char := range str {
-		if char > maxASCIIIndex {
-			return true
-		}
-	}
-	return false
-}
-
 // removeNonASCII replaces non-ASCII characters in a string with an ASCII equivalent.
 func removeNonASCII(str string) string {
 	// Create a hashmap to store non-ASCII characters as keys and ASCII characters as values
