@@ -23,7 +23,7 @@ jobs:
           go-version: stable
 
       - name: Setup FFmpeg
-        uses: federicocarboni/setup-ffmpeg@v3.1
+        run: brew install ffmpeg
 
       - name: Run tests
         run: go test -v ./...
