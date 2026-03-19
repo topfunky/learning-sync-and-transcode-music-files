@@ -9,11 +9,17 @@ import (
 var version = "dev"
 
 func main() {
+	versionPtr := flag.Bool("version", false, "Print the version and exit")
 	sourcePtr := flag.String("source", "source", "Directory in which to find original music files")
 	destinationPtr := flag.String("destination", "destination", "Output directory for transcoded files")
 	dryRunPtr := flag.Bool("dry-run", false, "Show which duplicate files would be deleted without deleting them")
 
 	flag.Parse()
+
+	if *versionPtr {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 
 	sourceDir := *sourcePtr
 	destinationDir := *destinationPtr
