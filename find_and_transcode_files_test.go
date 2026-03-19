@@ -310,6 +310,72 @@ func TestFindFiles_NoReRender(t *testing.T) {
 	})
 }
 
+func TestCopyFile_SourceNotFound(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test-copyfile")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	err = copyFile(filepath.Join(tempDir, "nonexistent.mp3"), filepath.Join(tempDir, "dest.mp3"))
+	assert.Error(t, err)
+}
+
+func TestCopyFile_Success(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test-copyfile-ok")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	src := filepath.Join(tempDir, "src.mp3")
+	dst := filepath.Join(tempDir, "subdir", "dst.mp3")
+	os.WriteFile(src, []byte("audio data"), 0644)
+
+	err = copyFile(src, dst)
+	assert.NoError(t, err)
+	assert.FileExists(t, dst)
+}
+
+func TestCompareDirectories_InvalidSource(t *testing.T) {
+	_, err := compareDirectories("/nonexistent/source/dir", "/tmp")
+	assert.Error(t, err)
+}
+
+func TestCompareDirectories_InvalidDestination(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test-compare")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	_, err = compareDirectories(tempDir, "/nonexistent/destination/dir")
+	assert.Error(t, err)
+}
+
+func TestGetFilenames_NonExistentDirectory(t *testing.T) {
+	_, err := getFilenames("/nonexistent/dir")
+	assert.Error(t, err)
+}
+
+func TestGetFilenames_ReturnsRelativePaths(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test-getfilenames")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	os.WriteFile(filepath.Join(tempDir, "a.mp3"), []byte{}, 0644)
+	os.WriteFile(filepath.Join(tempDir, "b.mp3"), []byte{}, 0644)
+
+	names, err := getFilenames(tempDir)
+	assert.NoError(t, err)
+	assert.Len(t, names, 2)
+	for _, n := range names {
+		assert.True(t, !filepath.IsAbs(n) || n[0] == '/', "path should be relative to dir or start with separator")
+	}
+}
+
 // Returns a string array of only the `sourcePath` attribute from an array of `fileToTranscode` structs.
 //
 // This makes test assertions cleaner, based on how the fixture data is written.

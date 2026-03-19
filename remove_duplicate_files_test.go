@@ -216,6 +216,21 @@ func TestSelectPreferredFile_KeepsLargerMP3(t *testing.T) {
 	assert.ElementsMatch(t, []string{smallMP3}, toDelete)
 }
 
+func TestSelectPreferredFile_EmptyCandidates(t *testing.T) {
+	_, _, err := selectPreferredFile([]string{})
+	assert.Error(t, err)
+}
+
+func TestFindDuplicates_NonExistentDirectory(t *testing.T) {
+	_, err := findDuplicates("/nonexistent/dir")
+	assert.Error(t, err)
+}
+
+func TestRemoveDuplicateFiles_NonExistentDirectory(t *testing.T) {
+	err := removeDuplicateFiles("/nonexistent/dir", false)
+	assert.Error(t, err)
+}
+
 func TestRemoveDuplicateFiles_NoFilesInDirectory(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "test-remove-duplicates-empty")
 	if err != nil {
