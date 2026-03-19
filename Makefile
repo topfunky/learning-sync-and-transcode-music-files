@@ -8,4 +8,4 @@ validate:
 	staticcheck ./...
 
 build: test
-	go build -o ./sync-and-transcode .
+	go build -o ./sync-and-transcode-music-files .
