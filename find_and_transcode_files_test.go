@@ -376,6 +376,42 @@ func TestGetFilenames_ReturnsRelativePaths(t *testing.T) {
 	}
 }
 
+// TestFindFiles_CopiesMP3OnlyFileVerbatim verifies that an mp3 file that exists
+// in the source with no higher-quality counterpart is always copied to the
+// destination verbatim, regardless of its file size (used as a bitrate proxy).
+func TestFindFiles_CopiesMP3OnlyFileVerbatim(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test-mp3-only")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	sourceDir := filepath.Join(tempDir, "source")
+	destinationDir := filepath.Join(tempDir, "destination")
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatalf("failed to create source dir: %v", err)
+	}
+
+	// Write a small MP3 file to simulate a low-bitrate track that only exists as MP3.
+	mp3Filename := "only-as-mp3.mp3"
+	mp3Content := []byte("fake mp3 content representing a low-bitrate file")
+	if err := os.WriteFile(filepath.Join(sourceDir, mp3Filename), mp3Content, 0644); err != nil {
+		t.Fatalf("failed to create MP3 source file: %v", err)
+	}
+
+	err = findAndTranscodeFiles(sourceDir, destinationDir)
+	assert.NoError(t, err)
+
+	// The MP3 must be present in the destination regardless of its size.
+	destFile := filepath.Join(destinationDir, mp3Filename)
+	assert.FileExistsf(t, destFile, "mp3-only source file was not copied to destination")
+
+	// The copy must be verbatim (byte-for-byte identical).
+	destContent, err := os.ReadFile(destFile)
+	assert.NoError(t, err)
+	assert.Equal(t, mp3Content, destContent, "destination file content differs from source")
+}
+
 // Returns a string array of only the `sourcePath` attribute from an array of `fileToTranscode` structs.
 //
 // This makes test assertions cleaner, based on how the fixture data is written.
