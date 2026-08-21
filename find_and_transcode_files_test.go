@@ -73,6 +73,12 @@ func TestGetExclusiveFiles(t *testing.T) {
 			ExpectedOutput:  []string{"file1.mp3", "file2.mp3", "file3.mp3"},
 		},
 		{
+			Name:            "aiff, aifc, and uppercase extensions are transcoded",
+			SourceList:      []string{"01_Slow_Southern_Skies.aiff", "file2.aifc", "FILE3.AIF", "file4.WAV"},
+			DestinationList: []string{},
+			ExpectedOutput:  []string{"01_Slow_Southern_Skies.mp3", "file2.mp3", "FILE3.mp3", "file4.mp3"},
+		},
+		{
 			Name:            "Ignore non-music files",
 			SourceList:      []string{".DS_Store"},
 			DestinationList: []string{},
@@ -188,6 +194,8 @@ func setupFixtureFilesInDirectory(tempDir string, numberOfFiles int) error {
 		"source/the-band/file7.mp3",
 		"source/file8.aif",
 		"source/file9.wav",
+		"source/file10.aiff",
+		"source/file11.aifc",
 		"source/.DS_Store",
 	}
 	for _, file := range testFiles[0:numberOfFiles] {
@@ -231,6 +239,8 @@ func TestFindFiles(t *testing.T) {
 		"destination/the-band/file7.mp3",
 		"destination/file8.mp3",
 		"destination/file9.mp3",
+		"destination/file10.mp3",
+		"destination/file11.mp3",
 		// NOTE: Do not list .DS_Store or .txt files since they should not be transcoded
 	}
 

@@ -4,7 +4,7 @@
 
 **sync-and-transcode-music-files** is a CLI tool written in Go that syncs music from a source directory to a destination directory. It:
 - Compares source and destination to find files not yet transcoded
-- Transcodes `.aif`, `.wav`, and `.m4a` files to `.mp3` using ffmpeg (via `goffmpeg`)
+- Transcodes `.aif`, `.aiff`, `.aifc`, `.wav`, and `.m4a` files to `.mp3` using ffmpeg (via `goffmpeg`)
 - Copies existing `.mp3` files as-is
 - Removes duplicate files from the destination, keeping the best-quality MP3
 - Supports `--dry-run` to preview all writes (transcode, copy, delete) without changing anything
@@ -50,7 +50,7 @@ The codebase uses multiple files organized by responsibility:
 
 1. `compareDirectories` walks source and destination, returning files present in source but not yet in destination (matched by transcoded filename)
 1. Each missing file is either:
-   - Transcoded to `.mp3` if it is `.aif`, `.wav`, or `.m4a` — concurrently, via a worker pool sized to `runtime.NumCPU()`, with `[n/total]` progress output
+   - Transcoded to `.mp3` if it is `.aif`, `.aiff`, `.aifc`, `.wav`, or `.m4a` — concurrently, via a worker pool sized to `runtime.NumCPU()`, with `[n/total]` progress output
    - Copied directly if it is already `.mp3` (sequential; fast and I/O-bound)
 1. Per-file errors do not stop the run; they are collected and printed as an aggregated summary to stderr at the end
 1. `removeDuplicateFiles` scans the destination, groups files by base path (path without extension), and for each group keeps the best MP3 (largest file wins as a bit-rate proxy), deleting the rest
@@ -108,7 +108,7 @@ Before submitting changes:
 - [ ] All tests pass: `make test`
 - [ ] Changes follow Conventional Commits format
 - [ ] New features have corresponding tests
-- [ ] Non-MP3 music files handled: `.aif`, `.wav`, `.m4a`
+- [ ] Non-MP3 music files handled: `.aif`, `.aiff`, `.aifc`, `.wav`, `.m4a`
 - [ ] Hidden files (prefixed `._`) are skipped
 - [ ] Non-ASCII characters in filenames are sanitized via `removeNonASCII`
 - [ ] Errors printed to stderr, not swallowed silently

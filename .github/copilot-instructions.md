@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This Go project syncs and transcodes music files for use on a car's USB stick. It compares a source directory of music files with a destination directory and transcodes any missing files to `.mp3` format using FFmpeg. Files already in `.mp3` format are copied directly; files in `.aif`, `.wav`, or `.m4a` format are transcoded.
+This Go project syncs and transcodes music files for use on a car's USB stick. It compares a source directory of music files with a destination directory and transcodes any missing files to `.mp3` format using FFmpeg. Files already in `.mp3` format are copied directly; files in `.aif`, `.aiff`, `.aifc`, `.wav`, or `.m4a` format are transcoded.
 
 ## Repository Structure
 
@@ -33,7 +33,7 @@ The CI workflow (`.github/workflows/go.yml`) installs FFmpeg automatically via `
 - All public and package-level functions must have a GoDoc comment.
 - Use `fmt.Fprintf(os.Stderr, ...)` for error output; use `fmt.Printf` for progress messages with emoji prefixes (e.g., `🔍`, `🔊`, `📂`, `❗️`).
 - Non-ASCII characters in filenames are normalized to ASCII equivalents using `removeNonASCII` in `helper.go`. Add new character mappings there as needed.
-- Supported source formats for transcoding: `.aif`, `.wav`, `.m4a`. Add new formats to the `extensions` slice in `isUntranscodedMusicFile` in `helper.go`.
+- Supported source formats for transcoding: `.aif`, `.aiff`, `.aifc`, `.wav`, `.m4a` (extension matching is case-insensitive). Add new formats to the `extensions` slice in `isUntranscodedMusicFile` in `helper.go`.
 - Hidden files (names starting with `._`) and non-music files (`.DS_Store`, `.txt`, etc.) are silently skipped.
 - Use `github.com/stretchr/testify` for test assertions.
 - Keep the `fileToTranscode` struct for pairing source and destination paths through the pipeline.
