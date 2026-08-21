@@ -109,6 +109,9 @@ func findDuplicates(dir string) (map[string][]string, error) {
 func removeDuplicateFiles(dir string, dryRun bool) error {
 	duplicates, err := findDuplicates(dir)
 	if err != nil {
+		if dryRun && os.IsNotExist(err) {
+			return nil
+		}
 		return fmt.Errorf("error finding duplicates: %v", err)
 	}
 

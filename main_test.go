@@ -75,3 +75,28 @@ func TestMainFunction_DryRunFlag(t *testing.T) {
 	assert.FileExists(t, mp3File)
 	assert.FileExists(t, m4aFile)
 }
+
+func TestMainFunction_DryRunDoesNotTranscodeOrCopy(t *testing.T) {
+	oldArgs := os.Args
+	tempDir, _ := setupMainTest(t)
+	defer func() {
+		os.Args = oldArgs
+		os.RemoveAll(tempDir)
+	}()
+
+	sourceDir := filepath.Join(tempDir, "source")
+	_ = os.MkdirAll(sourceDir, 0755)
+	destinationDir := filepath.Join(tempDir, "destination")
+
+	// Place files in source that would normally be transcoded/copied.
+	os.WriteFile(filepath.Join(sourceDir, "track.wav"), []byte("fake wav"), 0644)
+	os.WriteFile(filepath.Join(sourceDir, "song.mp3"), []byte("fake mp3"), 0644)
+
+	os.Args = []string{"cmd", "-source=" + sourceDir, "-destination=" + destinationDir, "-dry-run"}
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+
+	main()
+
+	// Dry run must not create the destination directory or write any files.
+	assert.NoDirExists(t, destinationDir)
+}

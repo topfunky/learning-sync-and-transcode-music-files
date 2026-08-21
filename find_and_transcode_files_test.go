@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"log"
@@ -238,7 +241,7 @@ func TestFindFiles(t *testing.T) {
 
 	defer os.RemoveAll(tempDir)
 
-	findAndTranscodeFiles(filepath.Join(tempDir, "source"), filepath.Join(tempDir, "destination"))
+	findAndTranscodeFiles(filepath.Join(tempDir, "source"), filepath.Join(tempDir, "destination"), false)
 
 	for _, file := range transcodedFiles {
 		t.Run(fmt.Sprintf("File %s should be rendered", file), func(t *testing.T) {
@@ -273,7 +276,7 @@ func TestFindFiles_EmptyDestinationDirectory(t *testing.T) {
 	sourceDir := filepath.Join(tempDir, "source")
 	destinationDir := filepath.Join(tempDir, "destination dir that does not exist")
 
-	err = findAndTranscodeFiles(sourceDir, destinationDir)
+	err = findAndTranscodeFiles(sourceDir, destinationDir, false)
 	assert.NoError(t, err)
 
 }
@@ -288,7 +291,7 @@ func TestFindFiles_NoReRender(t *testing.T) {
 	destinationDir := filepath.Join(tempDir, "destination")
 
 	// Run the function for the first time
-	findAndTranscodeFiles(sourceDir, destinationDir)
+	findAndTranscodeFiles(sourceDir, destinationDir, false)
 
 	// Verify that the destination files were not re-rendered
 	file := "source/file1.m4a"
@@ -301,7 +304,7 @@ func TestFindFiles_NoReRender(t *testing.T) {
 		// Wait for a second to ensure the modified time is different
 		time.Sleep(time.Second)
 
-		findAndTranscodeFiles(sourceDir, destinationDir)
+		findAndTranscodeFiles(sourceDir, destinationDir, false)
 
 		info2, _ := os.Stat(destinationPath)
 		assert.FileExistsf(t, destinationPath, "Transcoded file not found: %s", file)
@@ -399,7 +402,7 @@ func TestFindFiles_CopiesMP3OnlyFileVerbatim(t *testing.T) {
 		t.Fatalf("failed to create MP3 source file: %v", err)
 	}
 
-	err = findAndTranscodeFiles(sourceDir, destinationDir)
+	err = findAndTranscodeFiles(sourceDir, destinationDir, false)
 	assert.NoError(t, err)
 
 	// The MP3 must be present in the destination regardless of its size.
@@ -421,4 +424,119 @@ func getDestinationPaths(files []fileToTranscode) []string {
 		sources = append(sources, file.destinationPath)
 	}
 	return sources
+}
+
+// captureStdout redirects os.Stdout for the duration of fn and returns what was printed.
+func captureStdout(t *testing.T, fn func()) string {
+	t.Helper()
+
+	old := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	os.Stdout = w
+	defer func() { os.Stdout = old }()
+
+	done := make(chan string)
+	go func() {
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		done <- buf.String()
+	}()
+
+	fn()
+
+	w.Close()
+	os.Stdout = old
+	return <-done
+}
+
+func TestFindFiles_DryRunDoesNotCreateDestinationOrWriteFiles(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test-dryrun")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	sourceDir := filepath.Join(tempDir, "source")
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatalf("failed to create source dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceDir, "track.wav"), []byte("fake wav"), 0644); err != nil {
+		t.Fatalf("failed to write wav fixture: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceDir, "track.mp3"), []byte("fake mp3"), 0644); err != nil {
+		t.Fatalf("failed to write mp3 fixture: %v", err)
+	}
+
+	destinationDir := filepath.Join(tempDir, "destination")
+
+	err = findAndTranscodeFiles(sourceDir, destinationDir, true)
+	assert.NoError(t, err)
+
+	assert.NoDirExists(t, destinationDir, "dry-run must not create the destination directory")
+}
+
+func TestFindFiles_DryRunPrintsPlannedActions(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test-dryrun-output")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	sourceDir := filepath.Join(tempDir, "source")
+	destinationDir := filepath.Join(tempDir, "destination")
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatalf("failed to create source dir: %v", err)
+	}
+	if err := os.MkdirAll(destinationDir, 0755); err != nil {
+		t.Fatalf("failed to create destination dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceDir, "track.wav"), []byte("fake wav"), 0644); err != nil {
+		t.Fatalf("failed to write wav fixture: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceDir, "song.mp3"), []byte("fake mp3"), 0644); err != nil {
+		t.Fatalf("failed to write mp3 fixture: %v", err)
+	}
+
+	output := captureStdout(t, func() {
+		err := findAndTranscodeFiles(sourceDir, destinationDir, true)
+		assert.NoError(t, err)
+	})
+
+	wavSource := filepath.Join(sourceDir, "track.wav")
+	wavDest := filepath.Join(destinationDir, "track.mp3")
+	mp3Source := filepath.Join(sourceDir, "song.mp3")
+	mp3Dest := filepath.Join(destinationDir, "song.mp3")
+
+	assert.True(t, strings.Contains(output, fmt.Sprintf("🔍 [dry-run] Would transcode: %s ➡️  %s", wavSource, wavDest)),
+		"expected dry-run transcode message, got:\n%s", output)
+	assert.True(t, strings.Contains(output, fmt.Sprintf("🔍 [dry-run] Would copy MP3: %s ➡️  %s", mp3Source, mp3Dest)),
+		"expected dry-run copy message, got:\n%s", output)
+
+	assert.NoFileExists(t, wavDest, "dry-run must not write transcoded files")
+	assert.NoFileExists(t, mp3Dest, "dry-run must not copy mp3 files")
+}
+
+func TestFindFiles_DryRunFalseStillWritesFiles(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test-dryrun-off")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	sourceDir := filepath.Join(tempDir, "source")
+	destinationDir := filepath.Join(tempDir, "destination")
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatalf("failed to create source dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceDir, "song.mp3"), []byte("fake mp3 content"), 0644); err != nil {
+		t.Fatalf("failed to write mp3 fixture: %v", err)
+	}
+
+	err = findAndTranscodeFiles(sourceDir, destinationDir, false)
+	assert.NoError(t, err)
+
+	assert.FileExists(t, filepath.Join(destinationDir, "song.mp3"), "non-dry-run must copy mp3 files")
 }

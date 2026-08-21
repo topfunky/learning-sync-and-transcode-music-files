@@ -7,7 +7,7 @@
 - Transcodes `.aif`, `.wav`, and `.m4a` files to `.mp3` using ffmpeg (via `goffmpeg`)
 - Copies existing `.mp3` files as-is
 - Removes duplicate files from the destination, keeping the best-quality MP3
-- Supports `--dry-run` to preview deletions without removing anything
+- Supports `--dry-run` to preview all writes (transcode, copy, delete) without changing anything
 
 ## Essential Commands
 

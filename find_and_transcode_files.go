@@ -17,22 +17,36 @@ type fileToTranscode struct {
 
 // findAndTranscodeFiles traverses the specified directory and transcodes music files to .mp3 format.
 // MP3 files will be copied to the destination directory as-is.
-func findAndTranscodeFiles(sourceDir, destinationDir string) error {
+// When dryRun is true, no files are written; it only prints what would be done.
+func findAndTranscodeFiles(sourceDir, destinationDir string, dryRun bool) error {
 	fmt.Printf("🔍 Finding files in source directory %s\n", sourceDir)
 
-	if err := os.MkdirAll(destinationDir, 0755); err != nil {
-		return fmt.Errorf("failed to create destination directory: %v", err)
+	if !dryRun {
+		if err := os.MkdirAll(destinationDir, 0755); err != nil {
+			return fmt.Errorf("failed to create destination directory: %v", err)
+		}
 	}
 
 	filesThatNeedToBeTranscoded, err := compareDirectories(sourceDir, destinationDir)
 	if err != nil {
-		return fmt.Errorf("error: %v", err)
+		if !(dryRun && os.IsNotExist(err)) {
+			return fmt.Errorf("error: %v", err)
+		}
+		filesThatNeedToBeTranscoded, err = compareDirectories(sourceDir, sourceDir)
+		if err != nil {
+			return fmt.Errorf("error: %v", err)
+		}
 	}
 
 	for _, file := range filesThatNeedToBeTranscoded {
 		sourcePath := filepath.Join(sourceDir, file.sourcePath)
 
 		if isUntranscodedMusicFile(sourcePath) {
+			if dryRun {
+				destinationPath := filepath.Join(destinationDir, convertSourceToDestinationFilename(file.sourcePath))
+				fmt.Printf("🔍 [dry-run] Would transcode: %s ➡️  %s\n", sourcePath, destinationPath)
+				continue
+			}
 			err := transcodeFileAtPath(file.sourcePath, sourcePath, destinationDir)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "❗️ Error while transcoding file: %v\n", err)
@@ -41,6 +55,10 @@ func findAndTranscodeFiles(sourceDir, destinationDir string) error {
 		} else {
 			// Copy mp3 from source to destination
 			destinationPath := filepath.Join(destinationDir, file.sourcePath)
+			if dryRun {
+				fmt.Printf("🔍 [dry-run] Would copy MP3: %s ➡️  %s\n", sourcePath, destinationPath)
+				continue
+			}
 			if err := copyFile(sourcePath, destinationPath); err != nil {
 				fmt.Fprintf(os.Stderr, "❗️ Error while copying file: %v\n", err)
 				// TODO: Maybe return error or queue for return
