@@ -87,3 +87,55 @@ func TestIsUntranscodedMusicFile(t *testing.T) {
 		})
 	}
 }
+
+func TestStripArtistAlbumFromFilename(t *testing.T) {
+	cases := []struct {
+		Name           string
+		Path           string
+		ExpectedOutput string
+	}{
+		{
+			Name:           "Repeats artist and album name",
+			Path:           "Ulrich Schnauss/Far Away Trains Passing By/Far Away Trains Passing By-01-001-Ulrich Schnauss-Knuddelmaus (2019 remaster).mp3",
+			ExpectedOutput: "Ulrich Schnauss/Far Away Trains Passing By/01-001-Knuddelmaus (2019 remaster).mp3",
+		},
+		{
+			Name:           "Case-insensitive match",
+			Path:           "Ulrich Schnauss/Far Away Trains Passing By/far away trains passing by-01-001-ULRICH SCHNAUSS-Knuddelmaus.mp3",
+			ExpectedOutput: "Ulrich Schnauss/Far Away Trains Passing By/01-001-Knuddelmaus.mp3",
+		},
+		{
+			Name:           "Song title matches album name is restored to original filename",
+			Path:           "Artist/Album/Artist-Album.mp3",
+			ExpectedOutput: "Artist/Album/Artist-Album.mp3",
+		},
+		{
+			Name:           "No matching segments passes through unchanged",
+			Path:           "Artist/Album/01 - Song Title.mp3",
+			ExpectedOutput: "Artist/Album/01 - Song Title.mp3",
+		},
+		{
+			Name:           "Flat path with no directories passes through unchanged",
+			Path:           "01 - Song Title.mp3",
+			ExpectedOutput: "01 - Song Title.mp3",
+		},
+		{
+			Name:           "Substring match is not stripped",
+			Path:           "Artist/Album/01-Artiste-Song Title.mp3",
+			ExpectedOutput: "Artist/Album/01-Artiste-Song Title.mp3",
+		},
+		{
+			Name:           "Nested directories can all be stripped",
+			Path:           "Artist/Album/Disc 1/Artist-Disc 1-01-Song Title.mp3",
+			ExpectedOutput: "Artist/Album/Disc 1/01-Song Title.mp3",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			t.Parallel()
+			result := stripArtistAlbumFromFilename(c.Path)
+			assert.Equal(t, c.ExpectedOutput, result)
+		})
+	}
+}

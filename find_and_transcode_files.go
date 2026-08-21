@@ -78,7 +78,7 @@ func findAndTranscodeFiles(sourceDir, destinationDir string, dryRun bool) error 
 		}
 		for _, file := range toCopy {
 			sourcePath := filepath.Join(sourceDir, file.sourcePath)
-			destinationPath := filepath.Join(destinationDir, file.sourcePath)
+			destinationPath := filepath.Join(destinationDir, file.destinationPath)
 			fmt.Printf("🔍 [dry-run] Would copy MP3: %s ➡️  %s\n", sourcePath, destinationPath)
 		}
 		return nil
@@ -87,7 +87,7 @@ func findAndTranscodeFiles(sourceDir, destinationDir string, dryRun bool) error 
 	// Copy MP3s sequentially; they are fast and I/O-bound.
 	for i, file := range toCopy {
 		sourcePath := filepath.Join(sourceDir, file.sourcePath)
-		destinationPath := filepath.Join(destinationDir, file.sourcePath)
+		destinationPath := filepath.Join(destinationDir, file.destinationPath)
 		if err := copyFile(sourcePath, destinationPath); err != nil {
 			fmt.Fprintf(os.Stderr, "[%d/%d] ❗️ Error while copying file %s: %v\n", i+1, len(toCopy), sourcePath, err)
 			errs = append(errs, fileError{file: file, err: err})
@@ -276,8 +276,8 @@ func getExclusiveFiles(filesA, filesB []string) []fileToTranscode {
 			// Skip hidden files
 			continue
 		} else if strings.HasSuffix(file, ".mp3") {
-			// Save .mp3 file name verbatim so it can be copied later
-			destinationFilename = file
+			// Normalize and strip redundant artist/album segments from the .mp3 file name so it can be copied later
+			destinationFilename = stripArtistAlbumFromFilename(removeNonASCII(file))
 		} else if isUntranscodedMusicFile(file) {
 			// Add file to struct so it can be transcoded to .mp3 later
 			destinationFilename = convertSourceToDestinationFilename(file)
@@ -302,13 +302,16 @@ func getExclusiveFiles(filesA, filesB []string) []fileToTranscode {
 	return exclusiveFiles
 }
 
-// convertSourceToDestinationFilename converts the filename by replacing the .m4a suffix with .mp3 and replacing non-ASCII characters with an ASCII equivalent.
+// convertSourceToDestinationFilename converts the filename by replacing the .m4a suffix with .mp3, replacing non-ASCII characters with an ASCII equivalent, and stripping redundant artist/album name segments that repeat a containing directory name.
 func convertSourceToDestinationFilename(filename string) string {
 	// Replace .m4a suffix with .mp3
 	filename = strings.TrimSuffix(filename, filepath.Ext(filename)) + ".mp3"
 
 	// Replace non-ASCII characters with an ASCII equivalent
 	filename = removeNonASCII(filename)
+
+	// Remove filename segments that redundantly repeat the artist/album directory names
+	filename = stripArtistAlbumFromFilename(filename)
 
 	return filename
 }

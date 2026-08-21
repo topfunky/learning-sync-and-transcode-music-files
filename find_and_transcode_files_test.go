@@ -100,12 +100,24 @@ func TestGetExclusiveFiles(t *testing.T) {
 			Name:            "Correctly compares non-ASCII filenames (alt)",
 			SourceList:      []string{"Megan Perry Fisher/Megan Perry Fisher - Pensées/Megan Perry Fisher - Pensées - 12 Pensée xii.m4a", "Stéphane Grappelli, Joe Pass & Niels-Henning Ørsted Pedersen/Tivoli Gardens, Copenhagen, Denmark (Live)/01 It's Only A Paper Moon.m4a"},
 			DestinationList: []string{},
-			ExpectedOutput:  []string{"Megan Perry Fisher/Megan Perry Fisher - Pensees/Megan Perry Fisher - Pensees - 12 Pensee xii.mp3", "Stephane Grappelli, Joe Pass & Niels-Henning Orsted Pedersen/Tivoli Gardens, Copenhagen, Denmark (Live)/01 It's Only A Paper Moon.mp3"},
+			ExpectedOutput:  []string{"Megan Perry Fisher/Megan Perry Fisher - Pensees/Pensees-12 Pensee xii.mp3", "Stephane Grappelli, Joe Pass & Niels-Henning Orsted Pedersen/Tivoli Gardens, Copenhagen, Denmark (Live)/01 It's Only A Paper Moon.mp3"},
 		},
 		{
 			Name:            "Does not re-transcode non-ASCII filenames",
 			SourceList:      []string{"Megan Perry Fisher/Megan Perry Fisher - Pensées/Megan Perry Fisher - Pensées - 12 Pensée xii.m4a", "Stéphane Grappelli, Joe Pass & Niels-Henning Ørsted Pedersen/Tivoli Gardens, Copenhagen, Denmark (Live)/01 It's Only A Paper Moon.m4a"},
-			DestinationList: []string{"Megan Perry Fisher/Megan Perry Fisher - Pensees/Megan Perry Fisher - Pensees - 12 Pensee xii.mp3", "Stephane Grappelli, Joe Pass & Niels-Henning Orsted Pedersen/Tivoli Gardens, Copenhagen, Denmark (Live)/01 It's Only A Paper Moon.mp3"},
+			DestinationList: []string{"Megan Perry Fisher/Megan Perry Fisher - Pensees/Pensees-12 Pensee xii.mp3", "Stephane Grappelli, Joe Pass & Niels-Henning Orsted Pedersen/Tivoli Gardens, Copenhagen, Denmark (Live)/01 It's Only A Paper Moon.mp3"},
+			ExpectedOutput:  []string(nil),
+		},
+		{
+			Name:            "Strips repeated artist and album name from an already-transcoded MP3 file",
+			SourceList:      []string{"Ulrich Schnauss/Far Away Trains Passing By/Far Away Trains Passing By-01-001-Ulrich Schnauss-Knuddelmaus (2019 remaster).mp3"},
+			DestinationList: []string{},
+			ExpectedOutput:  []string{"Ulrich Schnauss/Far Away Trains Passing By/01-001-Knuddelmaus (2019 remaster).mp3"},
+		},
+		{
+			Name:            "Does not re-copy an MP3 file that already has the stripped name in the destination",
+			SourceList:      []string{"Ulrich Schnauss/Far Away Trains Passing By/Far Away Trains Passing By-01-001-Ulrich Schnauss-Knuddelmaus (2019 remaster).mp3"},
+			DestinationList: []string{"Ulrich Schnauss/Far Away Trains Passing By/01-001-Knuddelmaus (2019 remaster).mp3"},
 			ExpectedOutput:  []string(nil),
 		},
 	}
@@ -144,6 +156,16 @@ func TestConvertSourceToDestinationFilename(t *testing.T) {
 			Name:           "Filename with no extension",
 			Filename:       "file3",
 			ExpectedOutput: "file3.mp3",
+		},
+		{
+			Name:           "Strips repeated artist and album name from path",
+			Filename:       "Ulrich Schnauss/Far Away Trains Passing By/Far Away Trains Passing By-01-001-Ulrich Schnauss-Knuddelmaus (2019 remaster).m4a",
+			ExpectedOutput: "Ulrich Schnauss/Far Away Trains Passing By/01-001-Knuddelmaus (2019 remaster).mp3",
+		},
+		{
+			Name:           "Strips repeated non-ASCII artist name after normalization",
+			Filename:       "Stéphane/Album/Stéphane-01-Song.m4a",
+			ExpectedOutput: "Stephane/Album/01-Song.mp3",
 		},
 	}
 
@@ -597,7 +619,8 @@ func TestFindFiles_ProgressCounterOutput(t *testing.T) {
 	assert.True(t, strings.Contains(output, "[2/2]"), "expected final counter [2/2], got:\n%s", output)
 }
 
-func TestFindFiles_DryRunFalseStillWritesFiles(t *testing.T) {	tempDir, err := os.MkdirTemp("", "test-dryrun-off")
+func TestFindFiles_DryRunFalseStillWritesFiles(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test-dryrun-off")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
