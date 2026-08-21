@@ -37,6 +37,7 @@ The CI workflow (`.github/workflows/go.yml`) installs FFmpeg automatically via `
 - Hidden files (names starting with `._`) and non-music files (`.DS_Store`, `.txt`, etc.) are silently skipped.
 - Use `github.com/stretchr/testify` for test assertions.
 - Keep the `fileToTranscode` struct for pairing source and destination paths through the pipeline.
+- Transcoding runs concurrently via a worker pool (`runtime.NumCPU()` workers) in `find_and_transcode_files.go`; per-file progress prints include an `[n/total]` counter and happen in the consumer goroutine, not in workers.
 
 ## Dependencies
 

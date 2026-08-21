@@ -5,7 +5,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/xfrr/goffmpeg/transcoder"
 )
@@ -18,6 +20,23 @@ type fileToTranscode struct {
 // findAndTranscodeFiles traverses the specified directory and transcodes music files to .mp3 format.
 // MP3 files will be copied to the destination directory as-is.
 // When dryRun is true, no files are written; it only prints what would be done.
+// fileError pairs a file with the error encountered while processing it.
+type fileError struct {
+	file fileToTranscode
+	err  error
+}
+
+// transcodeResult carries the outcome of one worker's transcode job.
+type transcodeResult struct {
+	file fileToTranscode
+	err  error
+}
+
+// findAndTranscodeFiles traverses the specified directory and transcodes music files to .mp3 format.
+// MP3 files will be copied to the destination directory as-is.
+// When dryRun is true, no files are written; it only prints what would be done.
+// Transcoding runs in parallel across all CPU cores; MP3 copies stay sequential.
+// Per-file errors do not stop processing; a summary is printed to stderr at the end.
 func findAndTranscodeFiles(sourceDir, destinationDir string, dryRun bool) error {
 	fmt.Printf("🔍 Finding files in source directory %s\n", sourceDir)
 
@@ -38,34 +57,101 @@ func findAndTranscodeFiles(sourceDir, destinationDir string, dryRun bool) error 
 		}
 	}
 
+	// Partition into files to transcode and MP3s to copy verbatim.
+	var toTranscode []fileToTranscode
+	var toCopy []fileToTranscode
 	for _, file := range filesThatNeedToBeTranscoded {
-		sourcePath := filepath.Join(sourceDir, file.sourcePath)
-
-		if isUntranscodedMusicFile(sourcePath) {
-			if dryRun {
-				destinationPath := filepath.Join(destinationDir, convertSourceToDestinationFilename(file.sourcePath))
-				fmt.Printf("🔍 [dry-run] Would transcode: %s ➡️  %s\n", sourcePath, destinationPath)
-				continue
-			}
-			err := transcodeFileAtPath(file.sourcePath, sourcePath, destinationDir)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "❗️ Error while transcoding file: %v\n", err)
-				// TODO: Maybe return error or queue for return
-			}
+		if isUntranscodedMusicFile(file.sourcePath) {
+			toTranscode = append(toTranscode, file)
 		} else {
-			// Copy mp3 from source to destination
-			destinationPath := filepath.Join(destinationDir, file.sourcePath)
-			if dryRun {
-				fmt.Printf("🔍 [dry-run] Would copy MP3: %s ➡️  %s\n", sourcePath, destinationPath)
-				continue
-			}
-			if err := copyFile(sourcePath, destinationPath); err != nil {
-				fmt.Fprintf(os.Stderr, "❗️ Error while copying file: %v\n", err)
-				// TODO: Maybe return error or queue for return
-			}
-			fmt.Printf("📂 Copied MP3: %s\n", destinationPath)
+			toCopy = append(toCopy, file)
 		}
 	}
+
+	var errs []fileError
+
+	if dryRun {
+		for _, file := range toTranscode {
+			sourcePath := filepath.Join(sourceDir, file.sourcePath)
+			destinationPath := filepath.Join(destinationDir, convertSourceToDestinationFilename(file.sourcePath))
+			fmt.Printf("🔍 [dry-run] Would transcode: %s ➡️  %s\n", sourcePath, destinationPath)
+		}
+		for _, file := range toCopy {
+			sourcePath := filepath.Join(sourceDir, file.sourcePath)
+			destinationPath := filepath.Join(destinationDir, file.sourcePath)
+			fmt.Printf("🔍 [dry-run] Would copy MP3: %s ➡️  %s\n", sourcePath, destinationPath)
+		}
+		return nil
+	}
+
+	// Copy MP3s sequentially; they are fast and I/O-bound.
+	for i, file := range toCopy {
+		sourcePath := filepath.Join(sourceDir, file.sourcePath)
+		destinationPath := filepath.Join(destinationDir, file.sourcePath)
+		if err := copyFile(sourcePath, destinationPath); err != nil {
+			fmt.Fprintf(os.Stderr, "[%d/%d] ❗️ Error while copying file %s: %v\n", i+1, len(toCopy), sourcePath, err)
+			errs = append(errs, fileError{file: file, err: err})
+			continue
+		}
+		fmt.Printf("[%d/%d] 📂 Copied MP3: %s\n", i+1, len(toCopy), destinationPath)
+	}
+
+	// Transcode concurrently with a worker pool sized to the CPU count.
+	if len(toTranscode) > 0 {
+		workers := runtime.NumCPU()
+		if workers > len(toTranscode) {
+			workers = len(toTranscode)
+		}
+
+		jobs := make(chan fileToTranscode)
+		results := make(chan transcodeResult, len(toTranscode))
+
+		var wg sync.WaitGroup
+		for w := 0; w < workers; w++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for file := range jobs {
+					sourcePath := filepath.Join(sourceDir, file.sourcePath)
+					err := transcodeFileAtPath(file.sourcePath, sourcePath, destinationDir)
+					results <- transcodeResult{file: file, err: err}
+				}
+			}()
+		}
+
+		go func() {
+			for _, file := range toTranscode {
+				jobs <- file
+			}
+			close(jobs)
+		}()
+
+		go func() {
+			wg.Wait()
+			close(results)
+		}()
+
+		completed := 0
+		for result := range results {
+			completed++
+			sourcePath := filepath.Join(sourceDir, result.file.sourcePath)
+			if result.err != nil {
+				fmt.Fprintf(os.Stderr, "[%d/%d] ❗️ Error while transcoding %s: %v\n", completed, len(toTranscode), sourcePath, result.err)
+				errs = append(errs, fileError(result))
+				continue
+			}
+			destinationPath := filepath.Join(destinationDir, result.file.destinationPath)
+			fmt.Printf("[%d/%d] 🔊 Transcoded: %s ➡️  %s\n", completed, len(toTranscode), sourcePath, destinationPath)
+		}
+	}
+
+	if len(errs) > 0 {
+		fmt.Fprintf(os.Stderr, "❗️ %d of %d files failed:\n", len(errs), len(toTranscode)+len(toCopy))
+		for _, fe := range errs {
+			fmt.Fprintf(os.Stderr, "  - %s: %v\n", fe.file.sourcePath, fe.err)
+		}
+	}
+
 	return nil
 }
 
@@ -129,7 +215,6 @@ func transcodeFileAtPath(fileSourcePath, sourcePath, destinationDir string) erro
 		return err
 	}
 
-	fmt.Printf("🔊 Transcoded: %s ➡️  %s\n", sourcePath, destinationPath)
 	return nil
 }
 

@@ -50,8 +50,9 @@ The codebase uses multiple files organized by responsibility:
 
 1. `compareDirectories` walks source and destination, returning files present in source but not yet in destination (matched by transcoded filename)
 1. Each missing file is either:
-   - Transcoded to `.mp3` if it is `.aif`, `.wav`, or `.m4a`
-   - Copied directly if it is already `.mp3`
+   - Transcoded to `.mp3` if it is `.aif`, `.wav`, or `.m4a` — concurrently, via a worker pool sized to `runtime.NumCPU()`, with `[n/total]` progress output
+   - Copied directly if it is already `.mp3` (sequential; fast and I/O-bound)
+1. Per-file errors do not stop the run; they are collected and printed as an aggregated summary to stderr at the end
 1. `removeDuplicateFiles` scans the destination, groups files by base path (path without extension), and for each group keeps the best MP3 (largest file wins as a bit-rate proxy), deleting the rest
 
 ### Key Types

@@ -519,8 +519,75 @@ func TestFindFiles_DryRunPrintsPlannedActions(t *testing.T) {
 	assert.NoFileExists(t, mp3Dest, "dry-run must not copy mp3 files")
 }
 
-func TestFindFiles_DryRunFalseStillWritesFiles(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "test-dryrun-off")
+func TestFindFiles_ParallelTranscodesAllFiles(t *testing.T) {
+	expectedFiles := []string{
+		"destination/file1.mp3",
+		"destination/file2.mp3",
+		"destination/Alexandra Streliski/Neo-Romance (Extended Version) [96kHz  24bit]/02 - Lumieres.mp3",
+		"destination/a-band/file5.mp3",
+		"destination/Whitespace Band/file6.mp3",
+		"destination/the-band/file7.mp3",
+		"destination/file8.mp3",
+		"destination/file9.mp3",
+	}
+
+	tempDir, err := setup(t, 8)
+	if err != nil {
+		t.Fatalf("failed to set up fixture files: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	err = findAndTranscodeFiles(filepath.Join(tempDir, "source"), filepath.Join(tempDir, "destination"), false)
+	assert.NoError(t, err)
+
+	for _, file := range expectedFiles {
+		assert.FileExistsf(t, filepath.Join(tempDir, file), "expected file missing: %s", file)
+	}
+}
+
+func TestFindFiles_ContinuesAfterTranscodeError(t *testing.T) {
+	tempDir, err := setup(t, 1)
+	if err != nil {
+		t.Fatalf("failed to set up fixture files: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	sourceDir := filepath.Join(tempDir, "source")
+	// Write a corrupt file with a valid media extension so ffmpeg fails on it.
+	corruptPath := filepath.Join(sourceDir, "corrupt.m4a")
+	if err := os.WriteFile(corruptPath, []byte("this is not valid audio data"), 0644); err != nil {
+		t.Fatalf("failed to write corrupt fixture: %v", err)
+	}
+
+	destinationDir := filepath.Join(tempDir, "destination")
+	err = findAndTranscodeFiles(sourceDir, destinationDir, false)
+	assert.NoError(t, err, "per-file errors must not fail the whole run")
+
+	// The valid file should still have been transcoded despite the corrupt one failing.
+	assert.FileExists(t, filepath.Join(destinationDir, "file1.mp3"), "valid file was not transcoded after sibling failure")
+}
+
+func TestFindFiles_ProgressCounterOutput(t *testing.T) {
+	tempDir, err := setup(t, 2)
+	if err != nil {
+		t.Fatalf("failed to set up fixture files: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	sourceDir := filepath.Join(tempDir, "source")
+	destinationDir := filepath.Join(tempDir, "destination")
+
+	output := captureStdout(t, func() {
+		err := findAndTranscodeFiles(sourceDir, destinationDir, false)
+		assert.NoError(t, err)
+	})
+
+	// 2 transcodable files (file1.m4a, file2.m4a); counter must reach the total.
+	assert.True(t, strings.Contains(output, "[1/2]"), "expected progress counter [1/2], got:\n%s", output)
+	assert.True(t, strings.Contains(output, "[2/2]"), "expected final counter [2/2], got:\n%s", output)
+}
+
+func TestFindFiles_DryRunFalseStillWritesFiles(t *testing.T) {	tempDir, err := os.MkdirTemp("", "test-dryrun-off")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
